@@ -19,6 +19,7 @@ import { Telegraf } from 'telegraf';
         webhook: {
           domain: config.get<string>('APP_DOMAIN'),
           port: config.get<number>('APP_PORT'),
+          hookPath: '/v1/webhook'
         },
       }),
       inject: [ConfigService],

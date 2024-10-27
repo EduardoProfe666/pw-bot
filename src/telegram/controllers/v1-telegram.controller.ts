@@ -30,10 +30,14 @@ export default class V1TelegramController {
     const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     const domain = this.configService.get<string>('APP_DOMAIN');
 
-    const url = `https://api.telegram.org/bot${token}/setWebhook?url=${domain}/v1/webhook`;
+    const url = `https://api.telegram.org/bot${token}/setWebhook`;
 
     try {
-      const response = await lastValueFrom(this.httpService.post(url, null));
+      const response = await lastValueFrom(this.httpService.post(url, null, {
+        params: {
+          url: `${domain}/v1/webhook`
+        }
+      }));
       return response.data;
     } catch (error) {
       throw new Error(`Error setting webhook: ${error.message}`);
