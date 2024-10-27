@@ -5,12 +5,15 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { json, urlencoded } from 'express';
+import { getBotToken } from 'nestjs-telegraf';
 
 async function bootstrap() {
   const logger = new Logger('AppBootstrap');
   const app = await NestFactory.create(AppModule);
   const config = app.get<ConfigService>(ConfigService);
   const port = config.get<number>('APP_PORT');
+
+  const bot = app.get(getBotToken());
 
   const options = new DocumentBuilder()
     .setTitle('PW G-31 Bot API')
@@ -48,6 +51,7 @@ async function bootstrap() {
   app.use(helmet());
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ extended: true, limit: '50mb' }));
+  app.use(bot.webhookCallback('/v1/webhook'));
 
   await app.listen(port);
   logger.log('Listening in port ' + port);
