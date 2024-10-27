@@ -66,7 +66,7 @@ export default class TelegramService {
       1. No eres del grupo 31 🫵.
       2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
       `);
-    } else {
+    } else { 
       const assessments = (
         await this.gradesService.getByStudentUsername(username)
       )
