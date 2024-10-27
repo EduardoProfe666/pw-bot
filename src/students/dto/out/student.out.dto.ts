@@ -10,4 +10,7 @@ export default class StudentOutDto {
 
   @ApiProperty()
   username: string;
+
+  @ApiProperty()
+  fullname: string;
 }

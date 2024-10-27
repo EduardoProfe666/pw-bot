@@ -21,14 +21,25 @@ export default class StudentsService {
     return students.map((st) => this.toOutDto(st));
   }
 
-  public async getById(id: number): Promise<StudentWithGradesOutDto> {
+  public async getById(id: number): Promise<StudentOutDto> {
     const student = await this.pgService.students.findOne({
       where: { id },
+      relations: ['grades'],
     });
     if (!student) {
       throw new NotFoundException(`Student with ID ${id} not found`);
     }
-    return this.toOutWithGradesDto(student);
+    return this.toOutDto(student);
+  }
+
+  public async getByUsername(username: string): Promise<StudentOutDto> {
+    const student = await this.pgService.students.findOne({
+      where: { username },
+    });
+    if (!student) {
+      throw new NotFoundException(`Student with username @${username} not found`);
+    }
+    return this.toOutDto(student);
   }
 
   public async put(id: number, dto: StudentInDto): Promise<void> {
@@ -84,7 +95,8 @@ export default class StudentsService {
     return {
       id: student.id,
       name: student.name,
-      username: student.username
+      username: student.username,
+      fullname: student.fullName
     };
   }
 
@@ -93,6 +105,7 @@ export default class StudentsService {
       id: student.id,
       name: student.name,
       username: student.username,
+      fullname: student.fullName,
       grades: student.grades?.map(x => ({
         id: x.id,
         grade: x.grade,

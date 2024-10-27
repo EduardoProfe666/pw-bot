@@ -11,4 +11,9 @@ export default class StudentInDto {
   @IsString()
   @IsNotEmpty()
   username: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  fullname: string;
 }

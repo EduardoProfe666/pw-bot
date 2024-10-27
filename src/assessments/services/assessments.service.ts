@@ -17,7 +17,11 @@ export default class AssessmentsService {
   constructor(private readonly pgService: PgService) {}
 
   public async getAll(): Promise<AssessmentOutDto[]> {
-    const assessments = await this.pgService.assessments.find();
+    const assessments = await this.pgService.assessments.find({
+      order: {
+        id: 'ASC'
+      }
+    });
     return assessments.map((assessment) => this.toOutDto(assessment));
   }
 

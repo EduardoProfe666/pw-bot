@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
+  ParseIntPipe, ParseUUIDPipe,
   Post,
   Put,
   UseGuards,
@@ -39,10 +39,10 @@ export default class V1StudentsController {
   }
 
   @Get('/:id')
-  @ApiOkResponse({description: "Ok", type: StudentWithGradesOutDto})
+  @ApiOkResponse({description: "Ok", type: StudentOutDto})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
-  @ApiOperation({summary: 'Get an Student with grades by its id'})
+  @ApiOperation({summary: 'Get an Student by its id'})
   async getById(@Param('id', ParseIntPipe) id: number){
     return this.service.getById(id);
   }

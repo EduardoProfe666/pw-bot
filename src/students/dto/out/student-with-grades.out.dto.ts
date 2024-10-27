@@ -11,6 +11,9 @@ export default class StudentWithGradesOutDto {
   @ApiProperty()
   username: string;
 
+  @ApiProperty()
+  fullname: string;
+
   @ApiProperty({type: [GradeWithAssessmentOutDto]})
   grades?: GradeWithAssessmentOutDto[];
 }

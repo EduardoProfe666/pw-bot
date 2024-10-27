@@ -10,6 +10,9 @@ export default class Student{
   name: string;
 
   @Column('character varying', { length: 255 })
+  fullName: string;
+
+  @Column('character varying', { length: 255 })
   username: string;
 
   @OneToMany(() => Grade, grade => grade.student)

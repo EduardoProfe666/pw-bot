@@ -55,6 +55,25 @@ export default class GradesService {
       : grades.map((x) => this.toOutDtoWithAssessment(x));
   }
 
+  public async getByStudentUsername(
+    username: string,
+  ): Promise<GradeWithAssessmentOutDto[]> {
+    const st = await this.pgService.students.findOne({ where: { username } });
+
+    if (!st) {
+      throw new NotFoundException(`Student with username ${username} not found`);
+    }
+
+    const grades = await this.pgService.grades.find({
+      where: { student: st },
+      relations: ['student', 'assessment'],
+    });
+
+    return !grades || grades.length === 0
+      ? []
+      : grades.map((x) => this.toOutDtoWithAssessment(x));
+  }
+
   public async put(id: number, dto: GradeInDto): Promise<void> {
     const grade = await this.pgService.grades.findOne({
       where: { id },
