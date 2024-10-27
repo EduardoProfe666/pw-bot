@@ -13,8 +13,6 @@ async function bootstrap() {
   const config = app.get<ConfigService>(ConfigService);
   const port = config.get<number>('APP_PORT');
 
-  const bot = app.get(getBotToken());
-
   const options = new DocumentBuilder()
     .setTitle('PW G-31 Bot API')
     .setDescription('### API of the Telegram bot for the Web Programming subject of group 31.')
@@ -51,7 +49,6 @@ async function bootstrap() {
   app.use(helmet());
   app.use(json({ limit: '50mb' }));
   app.use(urlencoded({ extended: true, limit: '50mb' }));
-  app.use(bot.webhookCallback('/v1/webhook'));
 
   await app.listen(port);
   logger.log('Listening in port ' + port);
