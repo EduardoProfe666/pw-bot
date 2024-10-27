@@ -7,6 +7,7 @@ import AssessmentsModule from '../assessments/assessments.module';
 import TelegramService from './services/telegram.service';
 import V1TelegramController from './controllers/v1-telegram.controller';
 import { HttpModule } from '@nestjs/axios';
+import { Telegraf } from 'telegraf';
 
 @Module({
   imports: [
@@ -28,6 +29,6 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule
   ],
   controllers: [V1TelegramController],
-  providers: [TelegramService],
+  providers: [TelegramService, Telegraf],
 })
 export default class TelegramModule {}
