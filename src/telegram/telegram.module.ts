@@ -5,6 +5,8 @@ import GradesModule from '../grades/grades.module';
 import StudentsModule from '../students/students.module';
 import AssessmentsModule from '../assessments/assessments.module';
 import TelegramService from './services/telegram.service';
+import V1TelegramController from './controllers/v1-telegram.controller';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -13,14 +15,19 @@ import TelegramService from './services/telegram.service';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         token: config.get<string>('TELEGRAM_TOKEN'),
+        webhook: {
+          domain: config.get<string>('APP_DOMAIN'),
+          port: config.get<number>('APP_PORT'),
+        },
       }),
       inject: [ConfigService],
     }),
     GradesModule,
     StudentsModule,
-    AssessmentsModule
+    AssessmentsModule,
+    HttpModule
   ],
-  controllers: [],
+  controllers: [V1TelegramController],
   providers: [TelegramService],
 })
 export default class TelegramModule {}
