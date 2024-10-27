@@ -12,7 +12,7 @@ export default class StudentWithGradesOutDto {
   username: string;
 
   @ApiProperty()
-  fullname: string;
+  fullName: string;
 
   @ApiProperty({type: [GradeWithAssessmentOutDto]})
   grades?: GradeWithAssessmentOutDto[];

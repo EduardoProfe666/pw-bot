@@ -96,7 +96,7 @@ export default class StudentsService {
       id: student.id,
       name: student.name,
       username: student.username,
-      fullname: student.fullName
+      fullName: student.fullName
     };
   }
 
@@ -105,7 +105,7 @@ export default class StudentsService {
       id: student.id,
       name: student.name,
       username: student.username,
-      fullname: student.fullName,
+      fullName: student.fullName,
       grades: student.grades?.map(x => ({
         id: x.id,
         grade: x.grade,
