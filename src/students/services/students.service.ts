@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -7,7 +6,6 @@ import {
 import PgService from '../../database/services/pg.service';
 import Student from '../../database/entities/student.entity';
 import StudentOutDto from '../dto/out/student.out.dto';
-import StudentWithGradesOutDto from '../dto/out/student-with-grades.out.dto';
 import StudentInDto from '../dto/in/student.in.dto';
 
 @Injectable()
@@ -17,14 +15,16 @@ export default class StudentsService {
   constructor(private readonly pgService: PgService) {}
 
   public async getAll(): Promise<StudentOutDto[]> {
-    const students = await this.pgService.students.find();
+    const students = await this.pgService.students.find({
+      relations: ['user']
+    });
     return students.map((st) => this.toOutDto(st));
   }
 
   public async getById(id: number): Promise<StudentOutDto> {
     const student = await this.pgService.students.findOne({
       where: { id },
-      relations: ['grades'],
+      relations: ['user'],
     });
     if (!student) {
       throw new NotFoundException(`Student with ID ${id} not found`);
@@ -33,9 +33,12 @@ export default class StudentsService {
   }
 
   public async getByUsername(username: string): Promise<StudentOutDto> {
-    const student = await this.pgService.students.findOne({
-      where: { username },
+    const students = await this.pgService.students.find({
+      relations: ['user'],
     });
+
+    const student = students.find(x => x.user && x.user.username === username);
+
     if (!student) {
       throw new NotFoundException(`Student with username @${username} not found`);
     }
@@ -50,36 +53,9 @@ export default class StudentsService {
       throw new NotFoundException(`Student with ID ${id} not found`);
     }
 
-    const s = await this.pgService.students.findOne({
-      where: { username: dto.username },
-    });
-    if (s && s.id !== id) {
-      throw new ConflictException(
-        `Student with username "${dto.username}" already exists`,
-      );
-    }
-
     await this.pgService.students.update(id, dto);
     this.logger.log(`Updated student with ID ${id}`);
     this.logger.log({ ...dto });
-  }
-
-  public async post(dto: StudentInDto): Promise<StudentOutDto> {
-    const existingStudent = await this.pgService.students.findOne({
-      where: { username: dto.username },
-    });
-    if (existingStudent) {
-      throw new ConflictException(
-        `Student with username "${dto.username}" already exists`,
-      );
-    }
-
-    const newStudent = this.pgService.students.create(dto);
-    await this.pgService.students.save(newStudent);
-
-    this.logger.log(`Created new student with ID ${newStudent.id}`);
-    this.logger.log({ ...dto });
-    return this.toOutDto(newStudent);
   }
 
   public async delete(id: number): Promise<void> {
@@ -95,24 +71,9 @@ export default class StudentsService {
     return {
       id: student.id,
       name: student.name,
-      username: student.username,
-      fullName: student.fullName
-    };
-  }
-
-  private toOutWithGradesDto(student: Student): StudentWithGradesOutDto{
-    return {
-      id: student.id,
-      name: student.name,
-      username: student.username,
+      username: student.user?.username ?? "",
       fullName: student.fullName,
-      grades: student.grades?.map(x => ({
-        id: x.id,
-        grade: x.grade,
-        studentId: x.student.id,
-        assessment: x.assessment,
-        professorNote: x.professorNote
-      })) ?? []
-    }
+      userId: student.user?.id ?? 0
+    };
   }
 }

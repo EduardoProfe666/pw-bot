@@ -1,5 +1,6 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import Grade from './grade.entity';
+import User from './user.entity';
 
 @Entity({ name: 'students' })
 export default class Student{
@@ -12,9 +13,9 @@ export default class Student{
   @Column('character varying', { length: 255 })
   fullName: string;
 
-  @Column('character varying', { length: 255 })
-  username: string;
-
   @OneToMany(() => Grade, grade => grade.student)
   grades: Grade[];
+
+  @OneToOne(() => User, user => user.student, { onDelete: 'CASCADE' })
+  user: User;
 }

@@ -58,14 +58,14 @@ export default class GradesService {
   public async getByStudentUsername(
     username: string,
   ): Promise<GradeWithAssessmentOutDto[]> {
-    const st = await this.pgService.students.findOne({ where: { username } });
+    const user = await this.pgService.users.findOne({where: {username}, relations: ['student']});
 
-    if (!st) {
+    if (!user) {
       throw new NotFoundException(`Student with username ${username} not found`);
     }
 
     const grades = await this.pgService.grades.find({
-      where: { student: st },
+      where: { student: user.student },
       relations: ['student', 'assessment'],
     });
 
@@ -84,6 +84,7 @@ export default class GradesService {
 
     const student = await this.pgService.students.findOne({
       where: { id: dto.studentId },
+      relations: ['user'],
     });
 
     if (!student) {
@@ -108,7 +109,7 @@ export default class GradesService {
 
     if (g && g.id !== id) {
       throw new ConflictException(
-        `Grade of student "${student.username}" in assessment "${assessment.name}" already exists`,
+        `Grade of student "${student.user.username}" in assessment "${assessment.name}" already exists`,
       );
     }
 
@@ -125,6 +126,7 @@ export default class GradesService {
   public async post(dto: GradeInDto): Promise<GradeWithAssessmentOutDto> {
     const student = await this.pgService.students.findOne({
       where: { id: dto.studentId },
+      relations: ['user'],
     });
 
     if (!student) {
@@ -148,7 +150,7 @@ export default class GradesService {
     });
     if (existingGrade) {
       throw new ConflictException(
-        `Grade of student "${student.username}" in assessment "${assessment.name}" already exists`,
+        `Grade of student "${student.user.username}" in assessment "${assessment.name}" already exists`,
       );
     }
 

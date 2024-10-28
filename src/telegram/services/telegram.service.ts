@@ -139,20 +139,19 @@ export default class TelegramService {
   async hearsHello(ctx: Context) {
     const name = await this.extractName(await this.getUsername(ctx));
 
-    await ctx.reply(`Hola ${name}, cómo estas hoy!`, this.getMainKeyboard());
+    await ctx.reply(`Hola ${name}, cómo estas hoy!`);
   }
 
   @Hears('¿Quién es tu creador? 😏')
   async hearsCreator(ctx: Context) {
     await ctx.reply(
-      `Mi creador es @eduardoProfe666, su hermoso y sexy profe 😏`,
-      this.getMainKeyboard(),
+      `Mi creador es @eduardoProfe666, su hermoso y sexy profe 😏`
     );
   }
 
   @On('sticker')
   async on(ctx: Context) {
-    await ctx.reply('👋', this.getMainKeyboard());
+    await ctx.reply('👋');
   }
 
   @On('text')
@@ -160,8 +159,7 @@ export default class TelegramService {
     const name = await this.extractName(await this.getUsername(ctx));
 
     await ctx.reply(
-      `Lo siento ${name}, pero no te entendí... No soy ChatGPT, estúpid@`,
-      this.getMainKeyboard(),
+      `Lo siento ${name}, pero no te entendí... No soy ChatGPT, estúpid@`
     );
   }
 

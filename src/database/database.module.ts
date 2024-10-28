@@ -5,6 +5,7 @@ import PgService from './services/pg.service';
 import Assessment from './entities/assessment.entity';
 import Grade from './entities/grade.entity';
 import Student from './entities/student.entity';
+import User from './entities/user.entity';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import Student from './entities/student.entity';
           Assessment,
           Grade,
           Student,
+          User
         ]
       })
     }),
@@ -30,6 +32,7 @@ import Student from './entities/student.entity';
       Assessment,
       Grade,
       Student,
+      User
     ])
   ],
   exports: [PgService],

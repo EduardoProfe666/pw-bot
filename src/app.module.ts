@@ -7,6 +7,8 @@ import StudentsModule from './students/students.module';
 import TelegramModule from './telegram/telegram.module';
 import AuthModule from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import UsersModule from './users/users.module';
+import InfrastructureModule from './infrastructure/infrastructureModule';
 
 @Module({
   imports: [
@@ -26,8 +28,10 @@ import { CacheModule } from '@nestjs/cache-manager';
     AuthModule,
     DatabaseModule,
     GradesModule,
+    InfrastructureModule,
     StudentsModule,
     TelegramModule,
+    UsersModule
   ],
   controllers: [],
   providers: [],

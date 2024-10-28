@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse, ApiBearerAuth,
-  ApiConflictResponse,
+  ApiConflictResponse, ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -23,18 +23,22 @@ import GradesService from '../services/grades.service';
 import GradeOutDto from '../dto/out/grade.out.dto';
 import GradeWithAssessmentOutDto from '../dto/out/grade-with-assessment.out.dto';
 import GradeInDto from '../dto/in/grade.in.dto';
+import { RolesGuard } from '../../auth/guards/roles.guard';
+import { Roles } from '../../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 @Controller('v1/grades')
 @ApiTags('grades')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({description: "Unauthorized"})
+@ApiForbiddenResponse({description: "Forbidden"})
 @UseInterceptors(CacheInterceptor)
 export default class V1GradesController {
   constructor(private readonly service: GradesService) {}
 
   @Get('')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok", type: [GradeOutDto]})
   @ApiOperation({summary: 'Get All Grades'})
   async get(){
@@ -42,6 +46,7 @@ export default class V1GradesController {
   }
 
   @Get('/:id')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok", type: GradeWithAssessmentOutDto})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
@@ -51,6 +56,7 @@ export default class V1GradesController {
   }
 
   @Get('/student/:id')
+  @Roles('admin')
   @ApiOkResponse({type: [GradeWithAssessmentOutDto]})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
@@ -60,6 +66,7 @@ export default class V1GradesController {
   }
 
   @Put('/:id')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok"})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
@@ -73,6 +80,7 @@ export default class V1GradesController {
   }
 
   @Post('')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok", type: GradeWithAssessmentOutDto})
   @ApiBadRequestResponse({description: "Bad Request"})
   @ApiConflictResponse({description: "Conflict"})
@@ -82,6 +90,7 @@ export default class V1GradesController {
   }
 
   @Delete('/:id')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok"})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
