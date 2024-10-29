@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse, ApiBearerAuth,
-  ApiConflictResponse, ApiForbiddenResponse,
+  ApiConflictResponse, ApiCreatedResponse, ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -81,7 +81,7 @@ export default class V1GradesController {
 
   @Post('')
   @Roles('admin')
-  @ApiOkResponse({description: "Ok", type: GradeWithAssessmentOutDto})
+  @ApiCreatedResponse({description: "Created", type: GradeWithAssessmentOutDto})
   @ApiBadRequestResponse({description: "Bad Request"})
   @ApiConflictResponse({description: "Conflict"})
   @ApiOperation({summary: 'Create a new Grade if does not exist'})

@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import Student from './student.entity';
 import * as bcrypt from 'bcrypt';
 
@@ -22,6 +22,7 @@ export default class User{
   student: Student;
 
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword() {
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);

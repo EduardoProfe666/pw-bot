@@ -1,8 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
-import StudentInDto from '../../../students/dto/in/student.in.dto';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Length, Matches,
+  MinLength,
+} from 'class-validator';
 
-export default class UserInDto{
+export default class UserInDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -17,6 +22,16 @@ export default class UserInDto{
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
+  @MinLength(8)
+  @Matches(/(?=.*[0-9])/, {
+    message: 'password must contain at least one number.',
+  })
+  @Matches(/(?=.*\W)/, {
+    message: 'password must contain at least one special character.',
+  })
+    @Matches(/(?=.*[A-Z])/, {
+    message: 'password must contain at least one uppercase letter.',
+  })
   password: string;
 
   @ApiProperty()
@@ -28,5 +43,4 @@ export default class UserInDto{
   @IsNotEmpty()
   @IsString()
   fullName: string;
-
 }

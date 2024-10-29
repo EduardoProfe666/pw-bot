@@ -1,11 +1,11 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import PgService from '../../database/services/pg.service';
 import UserOutDto from '../dto/out/user.out.dto';
 import User from '../../database/entities/user.entity';
 import UserWithStudentOutDto from '../dto/out/user-with-student.out.dto';
 import UserInDto from '../dto/in/user.in.dto';
 import UserUpdateInDto from '../dto/in/user-update.in.dto';
-import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export default class UsersService {

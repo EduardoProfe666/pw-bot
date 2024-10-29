@@ -4,6 +4,7 @@ import StudentsService from '../../students/services/students.service';
 import AssessmentsService from '../../assessments/services/assessments.service';
 import GradesService from '../../grades/services/grades.service';
 import { Context } from 'node:vm';
+import PgService from '../../database/services/pg.service';
 
 @Update()
 @Injectable()
@@ -22,7 +23,7 @@ export default class TelegramService {
     const name = await this.extractName(await this.getUsername(ctx));
 
     await ctx.reply(
-      `Hola ${name}, estoy aquí para ayudarte. Presiona los botones de abajo para saber más. ¿Qué deseas hacer hoy?`,
+      `Hola ${name}, estoy aquí para ayudarte 😊. Presiona los botones de abajo para saber más 👇. ¿Qué deseas hacer hoy?`,
       this.getMainKeyboard(),
     );
   }
@@ -32,7 +33,7 @@ export default class TelegramService {
     const name = await this.extractName(await this.getUsername(ctx));
 
     await ctx.reply(
-      `Hola ${name}, te lo dije hace un ratico pero bueno... Parece que somos un poco retrasad... digo olvidadiz@s. Presiona los botones de abajo para saber más.`,
+      `Hola ${name}, te lo dije hace un ratico pero bueno 🙄... Parece que somos un poco retrasad... digo olvidadiz@s 🥴. Presiona los botones de abajo para saber más 👇.`,
       this.getMainKeyboard(),
     );
   }
@@ -44,12 +45,12 @@ export default class TelegramService {
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti:\n
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
       1. No eres del grupo 31 🫵.
       2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
       `);
     } else {
-      let res = `¡Claro que sí ${name}! Aquí te muestro un listado de tus notas hasta ahora:\n\n`;
+      let res = `¡Claro que sí ${name} 😊! Aquí te muestro un listado de tus notas hasta ahora 📝:\n\n`;
       res += '```\n' + (await this.generateGradesTable(username)) + '```';
       await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' });
     }
@@ -62,7 +63,7 @@ export default class TelegramService {
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti:\n
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
       1. No eres del grupo 31 🫵.
       2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
       `);
@@ -75,7 +76,7 @@ export default class TelegramService {
 
       if (assessments.length === 0) {
         await ctx.reply(
-          `Hola ${name}, no tienes ninguna evaluación y por tanto ninguna observación por el momento`,
+          `Hola ${name} 😊, no tienes ninguna evaluación y por tanto ninguna observación por el momento 🤷‍♂️`,
         );
       } else {
         const inlineKeyboard = assessments.map((name) => [
@@ -83,7 +84,7 @@ export default class TelegramService {
         ]);
 
         await ctx.reply(
-          `Hola ${name}, selecciona una evaluación para ver las observaciones del profesor:`,
+          `Hola ${name} 😊, selecciona una evaluación para ver las observaciones del profesor 🧑‍🏫:`,
           {
             reply_markup: {
               inline_keyboard: inlineKeyboard,
@@ -105,11 +106,11 @@ export default class TelegramService {
 
     if (grade) {
       await ctx.reply(
-        `Observaciones del profesor para ${assessmentName}:\n\nHola ${name}. ${grade.professorNote}`,
+        `Observaciones del profesor para ${assessmentName} 👀:\n\nHola ${name} 😊. ${grade.professorNote}`,
       );
     } else {
       await ctx.reply(
-        `Hola ${username}. No hay observaciones disponibles para ${assessmentName}.`,
+        `Hola ${username} 😊. No hay observaciones disponibles para ${assessmentName} 🤷‍♂️.`,
       );
     }
 
@@ -124,12 +125,12 @@ export default class TelegramService {
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti:\n
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
       1. No eres del grupo 31 🫵.
       2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
       `);
     } else {
-      let res = `¡Claro que sí ${name}! Aquí te muestro el ranking actual del aula:\n\n`;
+      let res = `¡Claro que sí ${name} 😊! Aquí te muestro el ranking actual del aula 📈:\n\n`;
       res += '```\n' + (await this.generateRankingTable()) + '```';
       await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' });
     }
@@ -139,10 +140,10 @@ export default class TelegramService {
   async hearsHello(ctx: Context) {
     const name = await this.extractName(await this.getUsername(ctx));
 
-    await ctx.reply(`Hola ${name}, cómo estas hoy!`);
+    await ctx.reply(`Hola ${name} 😊, cómo estas hoy 👋!`);
   }
 
-  @Hears('¿Quién es tu creador? 😏')
+  @Hears('¿Quién es tu creador? 🤔')
   async hearsCreator(ctx: Context) {
     await ctx.reply(
       `Mi creador es @eduardoProfe666, su hermoso y sexy profe 😏`
@@ -159,7 +160,7 @@ export default class TelegramService {
     const name = await this.extractName(await this.getUsername(ctx));
 
     await ctx.reply(
-      `Lo siento ${name}, pero no te entendí... No soy ChatGPT, estúpid@`
+      `Lo siento ${name}, pero no te entendí 🥴... No soy ChatGPT, estúpid@ 😃`
     );
   }
 
@@ -288,7 +289,7 @@ export default class TelegramService {
         keyboard: [
           [{ text: 'Ver mis notas 📝' }, { text: 'Observaciones 👀' }],
           [
-            { text: '¿Quién es tu creador? 😏' },
+            { text: '¿Quién es tu creador? 🤔' },
             { text: 'Ranking del aula 📈' },
           ],
         ],

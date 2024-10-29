@@ -9,6 +9,8 @@ import AuthModule from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import UsersModule from './users/users.module';
 import InfrastructureModule from './infrastructure/infrastructureModule';
+import ReportsModule from './reports/reports.module';
+import MailModule from './mail/mail.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import InfrastructureModule from './infrastructure/infrastructureModule';
     DatabaseModule,
     GradesModule,
     InfrastructureModule,
+    MailModule,
+    ReportsModule,
     StudentsModule,
     TelegramModule,
     UsersModule

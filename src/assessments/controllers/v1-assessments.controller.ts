@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse, ApiBearerAuth,
-  ApiConflictResponse, ApiForbiddenResponse,
+  ApiConflictResponse, ApiCreatedResponse, ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -28,11 +28,16 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 
 @Controller('v1/assessments')
 @ApiTags('assessments')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @UseInterceptors(CacheInterceptor)
+@ApiBearerAuth()
+@ApiUnauthorizedResponse({description: "Unauthorized"})
+@ApiForbiddenResponse({description: "Forbidden"})
 export default class V1AssessmentsController {
   constructor(private readonly service: AssessmentsService) {}
 
   @Get('')
+  @Roles('admin', 'student')
   @ApiOkResponse({description: "Ok", type: [AssessmentOutDto]})
   @ApiOperation({summary: 'Get All Assessments'})
   async get(){
@@ -40,6 +45,7 @@ export default class V1AssessmentsController {
   }
 
   @Get('/:id')
+  @Roles('admin', 'student')
   @ApiOkResponse({description: "Ok", type: AssessmentOutDto})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
@@ -53,11 +59,7 @@ export default class V1AssessmentsController {
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
   @ApiConflictResponse({description: "Conflict"})
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
-  @ApiUnauthorizedResponse({description: "Unauthorized"})
-  @ApiForbiddenResponse({description: "Forbidden"})
   @ApiOperation({summary: 'Update an Assessment by its id'})
   async put(
     @Param('id', ParseIntPipe) id: number,
@@ -67,14 +69,10 @@ export default class V1AssessmentsController {
   }
 
   @Post('')
-  @ApiOkResponse({description: "Ok", type: AssessmentOutDto})
+  @ApiCreatedResponse({description: "Created", type: AssessmentOutDto})
   @ApiBadRequestResponse({description: "Bad Request"})
   @ApiConflictResponse({description: 'Conflict'})
-  @UseGuards(JwtAuthGuard,RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
-  @ApiUnauthorizedResponse({description: "Unauthorized"})
-  @ApiForbiddenResponse({description: "Forbidden"})
   @ApiOperation({summary: 'Create a new Assessment if does not exist'})
   async post(@Body() dto: AssessmentInDto){
     return this.service.post(dto);
@@ -84,11 +82,7 @@ export default class V1AssessmentsController {
   @ApiOkResponse({description: "Ok"})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
-  @UseGuards(JwtAuthGuard,RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
-  @ApiUnauthorizedResponse({description: "Unauthorized"})
-  @ApiForbiddenResponse({description: "Forbidden"})
   @ApiOperation({summary: 'Delete an Assessment by its id'})
   async delete(@Param('id', ParseIntPipe) id: number){
     return this.service.delete(id);

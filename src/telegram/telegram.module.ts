@@ -6,11 +6,13 @@ import StudentsModule from '../students/students.module';
 import AssessmentsModule from '../assessments/assessments.module';
 import TelegramService from './services/telegram.service';
 import { HttpModule } from '@nestjs/axios';
+import DatabaseModule from '../database/database.module';
 
 
 @Module({
   imports: [
     ConfigModule,
+    DatabaseModule,
     TelegrafModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({

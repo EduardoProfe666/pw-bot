@@ -6,13 +6,13 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Put,
+  Put, Request,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiBearerAuth, ApiConflictResponse,
+  ApiBearerAuth, ApiConflictResponse, ApiCreatedResponse,
   ApiForbiddenResponse, ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -32,7 +32,6 @@ import { Roles } from '../../auth/decorators/roles.decorator';
 @Controller('v1/users')
 @ApiTags('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({description: "Unauthorized"})
 @ApiForbiddenResponse({description: "Forbidden"})
@@ -41,6 +40,7 @@ export default class V1UsersController {
   constructor(private readonly service: UsersService) {}
 
   @Get('')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok", type: [UserOutDto]})
   @ApiOperation({summary: 'Get All Users'})
   async get(){
@@ -48,6 +48,7 @@ export default class V1UsersController {
   }
 
   @Get('/:id')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok", type: UserWithStudentOutDto})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
@@ -57,7 +58,8 @@ export default class V1UsersController {
   }
 
   @Post('')
-  @ApiOkResponse({description: "Ok", type: UserOutDto})
+  @Roles('admin')
+  @ApiCreatedResponse({description: "Ok", type: UserOutDto})
   @ApiBadRequestResponse({description: "Bad Request"})
   @ApiConflictResponse({description: 'Conflict'})
   @ApiOperation({summary: 'Create a new User if does not exist'})
@@ -66,6 +68,7 @@ export default class V1UsersController {
   }
 
   @Put('/:id')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok"})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
@@ -79,6 +82,7 @@ export default class V1UsersController {
   }
 
   @Delete('/:id')
+  @Roles('admin')
   @ApiOkResponse({description: "Ok"})
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
@@ -86,4 +90,16 @@ export default class V1UsersController {
   async delete(@Param('id', ParseIntPipe) id: number){
     return this.service.delete(id);
   }
+
+  @Post('/me')
+  @Roles('student')
+  @ApiCreatedResponse({description: "Created User and Student", type: UserWithStudentOutDto})
+  @ApiNotFoundResponse({description: "Not Found"})
+  @ApiBadRequestResponse({description: "Bad Request"})
+  @ApiOperation({summary: 'Get the current user by username from students JWT'})
+  async getMe(@Request() req): Promise<UserWithStudentOutDto> {
+    const username = req.user.username;
+    return this.service.getByUsername(username);
+  }
+
 }
