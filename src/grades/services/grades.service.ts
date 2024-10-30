@@ -55,6 +55,47 @@ export default class GradesService {
       : grades.map((x) => this.toOutDtoWithAssessment(x));
   }
 
+  public async getAvgByStudentId(
+    id: number
+  ): Promise<number>{
+    const st = await this.pgService.students.findOne({ where: { id } });
+
+    if (!st) {
+      throw new NotFoundException(`Student with ID ${id} not found`);
+    }
+
+    const grades = await this.pgService.grades.find({
+      where: { student: st },
+      relations: ['student', 'assessment'],
+    });
+    let totalGrades = 0;
+    let countGrades = 0;
+
+    grades.forEach((x) => {
+      if (x.grade) {
+        totalGrades += x.grade;
+        countGrades++;
+      }
+    });
+
+    return countGrades > 0 ? parseFloat((totalGrades / countGrades).toFixed(2)) : 0;
+
+  }
+  public async getAvgByStudentUsername(
+    username: string
+  ): Promise<number>{
+    const user = await this.pgService.users.findOne({
+      where: { username },
+      relations: ['student']
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Student with Username ${username} not found`);
+    }
+
+    return this.getAvgByStudentId(user.student.id);
+  }
+
   public async getByStudentUsername(
     username: string,
   ): Promise<GradeWithAssessmentOutDto[]> {

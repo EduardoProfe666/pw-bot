@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
-import UserInDto from '../../../users/dto/in/user.in.dto';
+import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 
 export default class StudentInDto {
   @ApiProperty()
@@ -17,4 +16,9 @@ export default class StudentInDto {
   @IsString()
   @IsNotEmpty()
   isRecognized: boolean;
+
+  @ApiProperty()
+  @IsInt()
+  @Min(1)
+  listNumber: number;
 }

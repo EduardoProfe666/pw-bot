@@ -5,8 +5,8 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 @ApiTags('infrastructure')
 export default class V1InfrastructureController{
   @Get('/wake-up')
-  @ApiOperation({ summary: 'Wake up me' })
+  @ApiOperation({ summary: 'Wake me up' })
   async wakeUp(){
-    return {message: 'I am awake'};
+    return {message: 'Im awake'};
   }
 }

@@ -16,6 +16,9 @@ export default class Student{
   @Column('boolean')
   isRecognized: boolean;
 
+  @Column('int')
+  listNumber: number;
+
   @OneToMany(() => Grade, grade => grade.student)
   grades: Grade[];
 

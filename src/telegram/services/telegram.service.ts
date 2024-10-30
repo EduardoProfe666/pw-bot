@@ -7,6 +7,7 @@ import { Context } from 'node:vm';
 import PgService from '../../database/services/pg.service';
 import { AuthService } from '../../auth/services/auth.service';
 import UsersService from '../../users/services/users.service';
+import ReportsService from '../../reports/services/reports.service';
 
 @Update()
 @Injectable()
@@ -20,6 +21,7 @@ export default class TelegramService {
     private readonly studentService: StudentsService,
     private readonly assessmentsService: AssessmentsService,
     private readonly gradesService: GradesService,
+    private readonly reportService: ReportsService,
   ) {}
 
   @Start()
@@ -224,25 +226,9 @@ export default class TelegramService {
   }
 
   private async generateGradesTable(username: string): Promise<string> {
-    const grades = await this.gradesService.getByStudentUsername(username);
     const assessments = await this.assessmentsService.getAll();
-
-    const gradesMap = new Map<string, string>();
-    let totalGrades = 0;
-    let countGrades = 0;
-
+    const gradeTable = await this.reportService.getGradesTable(username);
     let maxAssessmentNameLength = 'Evaluación'.length;
-
-    for (const grade of grades) {
-      gradesMap.set(
-        grade.assessment.name,
-        grade.grade ? grade.grade.toString() : '---',
-      );
-      if (grade.grade) {
-        totalGrades += grade.grade;
-        countGrades++;
-      }
-    }
 
     for (const assessment of assessments) {
       maxAssessmentNameLength = Math.max(
@@ -258,54 +244,33 @@ export default class TelegramService {
     res += `+${'-'.repeat(columnWidth + 2)}+------+\n`;
 
     for (const assessment of assessments) {
-      const grade = gradesMap.get(assessment.name) || '---';
+      const grade = gradeTable.gradeTable.find(x => x.assessmentId == assessment.id)?.grade?.toFixed(2) ?? '---';
       res += `| ${assessment.name.padEnd(columnWidth)} | ${grade.padEnd(4)} |\n`;
     }
 
-    const average =
-      countGrades > 0 ? (totalGrades / countGrades).toFixed(2) : '---';
+    let average = gradeTable.avg;
+    const avg = average > 0 ? average.toFixed(2) : '---';
 
     res += `+${'-'.repeat(columnWidth + 2)}+------+\n`;
-    res += `| ${'Promedio'.padEnd(columnWidth)} | ${average.padEnd(4)} |\n`;
+    res += `| ${'Promedio'.padEnd(columnWidth)} | ${avg.padEnd(4)} |\n`;
     res += `+${'-'.repeat(columnWidth + 2)}+------+\n`;
 
     return res.replace(/!/g, '\\!');
   }
 
   private async generateRankingTable(): Promise<string> {
-    const students = await this.studentService.getAll();
-    const rankingMap = new Map<number, { name: string; average: string }>();
+    const rankingTable = await this.reportService.getRankingTable();
+    const studentIds = rankingTable.ranking.map(x => x.studentId);
+    const students = (await this.studentService.getAll()).filter(x =>  studentIds.includes(x.id));
+
     let maxStudentNameLength = 'Estudiante'.length;
 
-    for (const student of students.filter(
-      (x) => x.username !== 'eduardoProfe666' && !x.isRecognized,
-    )) {
-      let totalGrades = 0;
-      let countGrades = 0;
-
-      const grades = await this.gradesService.getByStudentId(student.id);
-      grades.forEach((x) => {
-        if (x.grade) {
-          totalGrades += x.grade;
-          countGrades++;
-        }
-      });
-
-      const average =
-        countGrades > 0 ? (totalGrades / countGrades).toFixed(2) : '---';
-      rankingMap.set(student.id, { name: student.name, average });
+    for(const student of students){
       maxStudentNameLength = Math.max(
         maxStudentNameLength,
         student.name.length,
       );
     }
-
-    const rankingArray = Array.from(rankingMap.values()).sort((a, b) => {
-      if (a.average === '---' && b.average === '---') return 0;
-      if (a.average === '---') return 1;
-      if (b.average === '---') return -1;
-      return parseFloat(b.average) - parseFloat(a.average);
-    });
 
     const columnWidth = Math.max(maxStudentNameLength, 20);
 
@@ -313,15 +278,11 @@ export default class TelegramService {
     res += `| No | ${'Estudiante'.padEnd(columnWidth)} | Nota |\n`;
     res += `+----+${'-'.repeat(columnWidth + 2)}+------+\n`;
 
-    let pos = 0;
-    let prevAvg = '';
 
-    for (const { name, average } of rankingArray) {
-      if (average !== prevAvg) {
-        pos += 1;
-        prevAvg = average;
-      }
-      res += `| ${pos.toString().padEnd(2)} | ${name.padEnd(columnWidth)} | ${average.padEnd(4)} |\n`;
+    for (const { studentId, avg, position } of rankingTable.ranking) {
+      const st = students.find(x => x.id === studentId);
+      const average = avg > 0 ? avg.toFixed(2) : '---';
+      res += `| ${position.toString().padEnd(2)} | ${st.name.padEnd(columnWidth)} | ${average.padEnd(4)} |\n`;
     }
 
     res += `+----+${'-'.repeat(columnWidth + 2)}+------+\n`;

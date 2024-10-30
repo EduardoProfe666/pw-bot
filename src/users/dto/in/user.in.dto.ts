@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsEmail,
+  IsEmail, IsInt,
   IsNotEmpty,
   IsString,
-  Length, Matches,
+  Length, Matches, Min,
   MinLength,
 } from 'class-validator';
 
@@ -43,4 +43,9 @@ export default class UserInDto {
   @IsNotEmpty()
   @IsString()
   fullName: string;
+
+  @ApiProperty()
+  @IsInt()
+  @Min(1)
+  listNumber: number;
 }

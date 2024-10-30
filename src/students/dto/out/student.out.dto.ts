@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsInt } from 'class-validator';
 
 export default class StudentOutDto {
   @ApiProperty()
@@ -18,4 +19,7 @@ export default class StudentOutDto {
 
   @ApiProperty()
   isRecognized: boolean;
+
+  @ApiProperty()
+  listNumber: number;
 }

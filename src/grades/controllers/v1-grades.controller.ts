@@ -6,7 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Put,
+  Put, Request,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -26,6 +26,8 @@ import GradeInDto from '../dto/in/grade.in.dto';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import AvgGradeOutDto from '../dto/out/avg-grade.out.dto';
+import UserWithStudentOutDto from '../../users/dto/out/user-with-student.out.dto';
 
 @Controller('v1/grades')
 @ApiTags('grades')
@@ -53,6 +55,31 @@ export default class V1GradesController {
   @ApiOperation({summary: 'Get a Grade with Assessment by its id'})
   async getById(@Param('id', ParseIntPipe) id: number){
     return this.service.getById(id);
+  }
+
+  @Get('/avg/:id')
+  @Roles('admin')
+  @ApiOkResponse({description: "Ok", type: AvgGradeOutDto})
+  @ApiNotFoundResponse({description: "Not Found"})
+  @ApiBadRequestResponse({description: "Bad Request"})
+  @ApiOperation({summary: 'Get an students avg grade by its id'})
+  async getAvgById(@Param('id', ParseIntPipe) id: number): Promise<AvgGradeOutDto>{
+    return {
+      avg: await this.service.getAvgByStudentId(id)
+    };
+  }
+
+  @Post('/avg/me')
+  @Roles('student')
+  @ApiOkResponse({description: "Ok", type: AvgGradeOutDto})
+  @ApiNotFoundResponse({description: "Not Found"})
+  @ApiBadRequestResponse({description: "Bad Request"})
+  @ApiOperation({summary: 'Get an students avg grade by its JWT username'})
+  async getMe(@Request() req): Promise<AvgGradeOutDto> {
+    const username = req.user.username;
+    return{
+      avg: await this.service.getAvgByStudentUsername(username)
+    };
   }
 
   @Get('/student/:id')
