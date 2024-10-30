@@ -8,6 +8,7 @@ import PgService from '../../database/services/pg.service';
 import { AuthService } from '../../auth/services/auth.service';
 import UsersService from '../../users/services/users.service';
 import ReportsService from '../../reports/services/reports.service';
+import { ConfigService } from '@nestjs/config';
 
 @Update()
 @Injectable()
@@ -22,6 +23,7 @@ export default class TelegramService {
     private readonly assessmentsService: AssessmentsService,
     private readonly gradesService: GradesService,
     private readonly reportService: ReportsService,
+    private readonly configService: ConfigService
   ) {}
 
   @Start()
@@ -184,6 +186,24 @@ export default class TelegramService {
     }
   }
 
+  @Hears('Enlace a Web App ⚓')
+  async hearsUrlUI(ctx: Context) {
+    const username = await this.getUsername(ctx);
+
+    const name = await this.extractName(username);
+
+    if (name === username) {
+      await ctx.reply(`
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
+      1. No eres del grupo 31 🫵.
+      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      `);
+    } else {
+      const url = this.configService.get<string>('APP_UI')
+      ctx.reply(`Hola ${name} 😊, Aquí tienes el enlace a la Web App: ${url} `);
+    }
+  }
+
   @Hears(['hola', 'Hola', 'HOLA'])
   async hearsHello(ctx: Context) {
     const name = await this.extractName(await this.getUsername(ctx));
@@ -302,7 +322,8 @@ export default class TelegramService {
           [
             {text: '¿Estoy convalidado? 🤓'},
             {text: 'Se me olvidó mi contraseña 🫤'}
-          ]
+          ],
+          [{text: 'Enlace a Web App ⚓'}]
         ],
         resize_keyboard: true,
         one_time_keyboard: true,
