@@ -12,4 +12,9 @@ export default class StudentInDto {
   @IsString()
   @IsNotEmpty()
   fullName: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  isRecognized: boolean;
 }

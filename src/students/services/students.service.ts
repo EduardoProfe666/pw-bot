@@ -73,7 +73,8 @@ export default class StudentsService {
       name: student.name,
       username: student.user?.username ?? "",
       fullName: student.fullName,
-      userId: student.user?.id ?? 0
+      userId: student.user?.id ?? 0,
+      isRecognized: student.isRecognized,
     };
   }
 }

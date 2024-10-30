@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import GradeWithAssessmentOutDto from '../../../grades/dto/out/grade-with-assessment.out.dto';
 
 export default class StudentOutDto {
   @ApiProperty()
@@ -16,4 +15,7 @@ export default class StudentOutDto {
 
   @ApiProperty()
   userId: number;
+
+  @ApiProperty()
+  isRecognized: boolean;
 }

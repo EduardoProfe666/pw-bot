@@ -58,6 +58,7 @@ export default class UsersService {
     const newStudent = this.pgService.students.create({
       fullName: dto.fullName,
       name: dto.name,
+      isRecognized: false
     });
     await this.pgService.students.save(newStudent);
 

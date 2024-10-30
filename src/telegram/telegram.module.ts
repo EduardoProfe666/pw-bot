@@ -7,6 +7,9 @@ import AssessmentsModule from '../assessments/assessments.module';
 import TelegramService from './services/telegram.service';
 import { HttpModule } from '@nestjs/axios';
 import DatabaseModule from '../database/database.module';
+import AuthModule from '../auth/auth.module';
+import UsersModule from '../users/users.module';
+import ReportsModule from '../reports/reports.module';
 
 
 @Module({
@@ -20,6 +23,9 @@ import DatabaseModule from '../database/database.module';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
+    UsersModule,
+    ReportsModule,
     GradesModule,
     StudentsModule,
     AssessmentsModule,

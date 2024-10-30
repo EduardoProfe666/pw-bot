@@ -13,6 +13,9 @@ export default class Student{
   @Column('character varying', { length: 255 })
   fullName: string;
 
+  @Column('boolean')
+  isRecognized: boolean;
+
   @OneToMany(() => Grade, grade => grade.student)
   grades: Grade[];
 

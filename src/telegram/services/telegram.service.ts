@@ -5,6 +5,8 @@ import AssessmentsService from '../../assessments/services/assessments.service';
 import GradesService from '../../grades/services/grades.service';
 import { Context } from 'node:vm';
 import PgService from '../../database/services/pg.service';
+import { AuthService } from '../../auth/services/auth.service';
+import UsersService from '../../users/services/users.service';
 
 @Update()
 @Injectable()
@@ -13,6 +15,8 @@ export default class TelegramService {
   private readonly defaultUsernameMessage = 'Imbécil sin "@"';
 
   constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UsersService,
     private readonly studentService: StudentsService,
     private readonly assessmentsService: AssessmentsService,
     private readonly gradesService: GradesService,
@@ -130,9 +134,51 @@ export default class TelegramService {
       2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
       `);
     } else {
-      let res = `¡Claro que sí ${name} 😊! Aquí te muestro el ranking actual del aula 📈:\n\n`;
+      let res = `¡Claro que sí ${name} 😊! Aquí te muestro el ranking actual del aula (Sin los convalidados)📈:\n\n`;
       res += '```\n' + (await this.generateRankingTable()) + '```';
       await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' });
+    }
+  }
+
+  @Hears('¿Estoy convalidado? 🤓')
+  async hearsRecognized(ctx: Context) {
+    const username = await this.getUsername(ctx);
+
+    const name = await this.extractName(username);
+
+    if (name === username) {
+      await ctx.reply(`
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
+      1. No eres del grupo 31 🫵.
+      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      `);
+    } else {
+      const st = await this.studentService.getByUsername(username);
+      if(st.isRecognized){
+        await ctx.reply('Siiiiiuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu 🥳🥳🥳🥳🥳🎉🎉🎉🎉🪅🪩👯👯‍♂️👯‍♀️');
+      }
+      else{
+        await ctx.reply('Nop, sorry 🫤');
+      }
+    }
+  }
+
+  @Hears('Se me olvidó mi contraseña 🫤')
+  async hearsForgotPassword(ctx: Context) {
+    const username = await this.getUsername(ctx);
+
+    const name = await this.extractName(username);
+
+    if (name === username) {
+      await ctx.reply(`
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
+      1. No eres del grupo 31 🫵.
+      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      `);
+    } else {
+      const user = await this.userService.getByUsername(username);
+      await this.authService.forgotPassword(user.email);
+      ctx.reply(`Hola ${name}, parece que somos un poco retrasad... digo olvidadiz@s 🥴. Revisa tu correo para resetear tu contraseña 🔑. Esperemos que esta vez no se te olvide 😊.`);
     }
   }
 
@@ -232,7 +278,7 @@ export default class TelegramService {
     let maxStudentNameLength = 'Estudiante'.length;
 
     for (const student of students.filter(
-      (x) => x.username !== 'eduardoProfe666',
+      (x) => x.username !== 'eduardoProfe666' && !x.isRecognized,
     )) {
       let totalGrades = 0;
       let countGrades = 0;
@@ -292,6 +338,10 @@ export default class TelegramService {
             { text: '¿Quién es tu creador? 🤔' },
             { text: 'Ranking del aula 📈' },
           ],
+          [
+            {text: '¿Estoy convalidado? 🤓'},
+            {text: 'Se me olvidó mi contraseña 🫤'}
+          ]
         ],
         resize_keyboard: true,
         one_time_keyboard: true,
