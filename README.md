@@ -24,7 +24,7 @@ funcional en el [siguiente enlace](https://t.me/pw_g31_bot)
 
 ## Levantando el proyecto 🎈
 
-> [!INFO]
+> [!WARNING]
 > El proyecto usa pnpm como administrador de paquetes, pero puedes usar el de tu preferencia.
 
 Primero instala las dependencias:
