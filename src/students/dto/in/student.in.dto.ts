@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 
 export default class StudentInDto {
   @ApiProperty()
@@ -13,9 +13,16 @@ export default class StudentInDto {
   fullName: string;
 
   @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
+  @IsBoolean()
   isRecognized: boolean;
+
+  @ApiProperty()
+  @IsBoolean()
+  isRepeater: boolean;
+
+  @ApiProperty()
+  @IsBoolean()
+  isCarryForward: boolean;
 
   @ApiProperty()
   @IsInt()

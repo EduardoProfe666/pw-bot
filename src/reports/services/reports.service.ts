@@ -202,6 +202,8 @@ export default class ReportsService {
       { header: 'Nombre de Usuario', key: 'username', width: 25 },
       { header: 'Nombre Acortado', key: 'shortName', width: 25 },
       { header: 'Convalidado', key: 'recognized', width: 18 },
+      { header: 'Arrastre', key: 'carry_forward', width: 18 },
+      { header: 'Repitente', key: 'repeater', width: 18 },
       { header: 'Promedio', key: 'average', width: 18 },
     ];
 
@@ -219,6 +221,8 @@ export default class ReportsService {
         username: user.username,
         shortName: user.student.name,
         recognized: user.student.isRecognized ? 'Sí' : 'No',
+        carry_forward: user.student.isCarryForward ? 'Sí' : 'No',
+        repeater: user.student.isRepeater ? 'Sí' : 'No',
         average: average > 0 ? average.toFixed(2) : '---',
       });
 

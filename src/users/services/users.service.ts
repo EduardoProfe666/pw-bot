@@ -59,7 +59,9 @@ export default class UsersService {
       fullName: dto.fullName,
       name: dto.name,
       isRecognized: false,
-      listNumber: dto.listNumber
+      listNumber: dto.listNumber,
+      isRepeater: dto.isRepeater,
+      isCarryForward: dto.isCarryForward,
     });
     await this.pgService.students.save(newStudent);
 

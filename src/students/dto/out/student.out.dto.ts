@@ -22,4 +22,10 @@ export default class StudentOutDto {
 
   @ApiProperty()
   listNumber: number;
+
+  @ApiProperty()
+  isRepeater: boolean;
+
+  @ApiProperty()
+  isCarryForward: boolean;
 }

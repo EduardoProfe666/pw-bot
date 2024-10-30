@@ -16,6 +16,12 @@ export default class Student{
   @Column('boolean')
   isRecognized: boolean;
 
+  @Column('boolean')
+  isRepeater: boolean;
+
+  @Column('boolean')
+  isCarryForward: boolean;
+
   @Column('int')
   listNumber: number;
 

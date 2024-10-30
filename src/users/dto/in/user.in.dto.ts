@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEmail, IsInt,
   IsNotEmpty,
   IsString,
@@ -48,4 +49,12 @@ export default class UserInDto {
   @IsInt()
   @Min(1)
   listNumber: number;
+
+  @ApiProperty()
+  @IsBoolean()
+  isRepeater: boolean;
+
+  @ApiProperty()
+  @IsBoolean()
+  isCarryForward: boolean;
 }
