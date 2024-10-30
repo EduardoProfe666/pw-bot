@@ -9,6 +9,12 @@ import { AuthService } from '../../auth/services/auth.service';
 import UsersService from '../../users/services/users.service';
 import ReportsService from '../../reports/services/reports.service';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import * as path from 'path';
+import { promisify } from 'util';
+
+const unlinkAsync = promisify(fs.unlink);
+const mkdirAsync = promisify(fs.mkdir);
 
 @Update()
 @Injectable()
@@ -103,23 +109,83 @@ export default class TelegramService {
     }
   }
 
-  @On('callback_query')
-  async handleAssessmentCallback(ctx: Context) {
-    const assessmentName = ctx.callbackQuery.data;
+  @Hears('Reportes 📄')
+  async hearsReports(ctx: Context) {
     const username = await this.getUsername(ctx);
     const name = await this.extractName(username);
-    const grade = (
-      await this.gradesService.getByStudentUsername(username)
-    ).find((x) => x.assessment.name === assessmentName);
 
-    if (grade) {
-      await ctx.reply(
-        `Observaciones del profesor para ${assessmentName} 👀:\n\nHola ${name} 😊. ${grade.professorNote}`,
-      );
+    if (name === username) {
+      await ctx.reply(`
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
+      1. No eres del grupo 31 🫵.
+      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      `);
     } else {
       await ctx.reply(
-        `Hola ${username} 😊. No hay observaciones disponibles para ${assessmentName} 🤷‍♂️.`,
+        `Hola ${name} 😊, selecciona el reporte que quieras exportar 🤖:`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: 'Exportar mis notas', callback_data: 'export_notes' }],
+              [{ text: 'Exportar el ranking actual', callback_data: 'export_ranking' }]
+            ],
+          },
+        }
       );
+    }
+
+  }
+
+  @On('callback_query')
+  async handleAssessmentCallback(ctx: Context) {
+    const callbackData = ctx.callbackQuery.data;
+    const username = await this.getUsername(ctx);
+    const name = await this.extractName(username);
+    let filePath: string;
+
+    if(callbackData === 'export_notes' || callbackData === 'export_ranking') {
+      try {
+        // Create temp directory if it doesn't exist
+        const tempDir = path.join(__dirname, 'temp');
+        if (!fs.existsSync(tempDir)) {
+          await mkdirAsync(tempDir);
+        }
+
+        if (callbackData === 'export_notes') {
+          const buffer = await this.reportService.exportGradesTable(username);
+          filePath = path.join(tempDir, 'Tus_Notas.pdf');
+          fs.writeFileSync(filePath, (buffer as string));
+          await ctx.replyWithDocument({ source: filePath });
+        } else if (callbackData === 'export_ranking') {
+          const buffer = await this.reportService.exportRankingTable();
+          filePath = path.join(tempDir, 'Ranking_Actual.pdf');
+          fs.writeFileSync(filePath, (buffer as string));
+          await ctx.replyWithDocument({ source: filePath });
+        }
+
+        if (filePath) {
+          await unlinkAsync(filePath);
+        }
+      } catch (error) {
+        this.logger.error('Error generating report:', error);
+        await ctx.reply('Error generando el reporte 😕. Por favor intenta de nuevo más tarde 👾.');
+      }
+    }
+    else{
+      const assessmentName = callbackData;
+      const grade = (
+        await this.gradesService.getByStudentUsername(username)
+      ).find((x) => x.assessment.name === assessmentName);
+
+      if (grade) {
+        await ctx.reply(
+          `Observaciones del profesor para ${assessmentName} 👀:\n\nHola ${name} 😊. ${grade.professorNote}`
+        );
+      } else {
+        await ctx.reply(
+          `Hola ${username} 😊. No hay observaciones disponibles para ${assessmentName} 🤷‍♂️.`
+        );
+      }
     }
 
     await ctx.answerCbQuery();
@@ -323,7 +389,7 @@ export default class TelegramService {
             {text: '¿Estoy convalidado? 🤓'},
             {text: 'Se me olvidó mi contraseña 🫤'}
           ],
-          [{text: 'Enlace a Web App ⚓'}]
+          [{text: 'Enlace a Web App ⚓'}, {text: 'Reportes 📄'}]
         ],
         resize_keyboard: true,
         one_time_keyboard: true,

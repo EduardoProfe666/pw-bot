@@ -14,4 +14,5 @@ export class RankingRow {
 export default class RankingTableOutDto {
   @ApiProperty({type: [RankingRow]})
   ranking: RankingRow[];
+
 }

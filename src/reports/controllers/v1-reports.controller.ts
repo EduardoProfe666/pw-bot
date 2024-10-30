@@ -57,9 +57,14 @@ export default class V1ReportsController{
   @Post('/rankingTable/export')
   @Roles('admin', 'student')
   @ApiOkResponse({description: "Ok", type: RankingTableOutDto})
-  @ApiOperation({summary: 'Get All Grades'})
-  async exportRankingTable(){
-    return this.service.exportRankingTable();
+  @ApiOperation({summary: 'Export Ranking Table to PDF'})
+  async exportRankingTable(@Res() res) {
+    const pdfBuffer = await this.service.exportRankingTable();
+
+    res.setHeader('Content-Disposition', 'attachment; filename=ranking_table.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+
+    res.end(pdfBuffer);
   }
 
   @Get('/gradesTable/:id')
@@ -78,8 +83,13 @@ export default class V1ReportsController{
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
   @ApiOperation({summary: 'Export an students grade Table by its id'})
-  async exportAvgById(@Param('id', ParseIntPipe) id: number){
-    return await this.service.exportGradesTable((await this.studentsService.getById(id)).username);
+  async exportAvgById(@Param('id', ParseIntPipe) id: number, @Res() res) {
+    const pdfBuffer = await this.service.exportGradesTable((await this.studentsService.getById(id)).username);
+
+    res.setHeader('Content-Disposition', 'attachment; filename=ranking_table.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+
+    res.end(pdfBuffer);
   }
 
   @Post('/gradesTable/me')
@@ -99,9 +109,14 @@ export default class V1ReportsController{
   @ApiNotFoundResponse({description: "Not Found"})
   @ApiBadRequestResponse({description: "Bad Request"})
   @ApiOperation({summary: 'Export an students grade table by its JWT username'})
-  async exportGradeTableJwt(@Request() req){
+  async exportGradeTableJwt(@Request() req, @Res() res) {
     const username = req.user.username;
-    return await this.service.getGradesTable(username);
+    const pdfBuffer = await this.service.exportGradesTable(username);
+
+    res.setHeader('Content-Disposition', 'attachment; filename=ranking_table.pdf');
+    res.setHeader('Content-Type', 'application/pdf');
+
+    res.end(pdfBuffer);
   }
 
 }

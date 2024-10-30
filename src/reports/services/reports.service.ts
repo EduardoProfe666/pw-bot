@@ -9,6 +9,10 @@ import GradesService from '../../grades/services/grades.service';
 import GradesTableOutDto, { GradeRow } from '../dto/out/grades-table.out.dto';
 import AssessmentsService from '../../assessments/services/assessments.service';
 import UserWithStudentOutDto from '../../users/dto/out/user-with-student.out.dto';
+import * as pdfMake from 'pdfmake/build/pdfmake';
+import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+
+(pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
 
 @Injectable()
 export default class ReportsService {
@@ -84,7 +88,99 @@ export default class ReportsService {
     };
   }
 
-  public async exportRankingTable() {}
+  public async exportRankingTable() {
+    const rankingTable: RankingTableOutDto = await this.getRankingTable();
+
+    const documentDefinition = await this.createRankingTableDocumentDefinition(rankingTable);
+    return new Promise((resolve, reject) => {
+      const pdfDoc = (pdfMake as any).createPdf(documentDefinition);
+      pdfDoc.getBuffer((buffer) => {
+        resolve(buffer);
+      });
+    });
+
+  }
+
+  private async createRankingTableDocumentDefinition(rankingTable: RankingTableOutDto) {
+    const today = new Date().toLocaleDateString('es-ES');
+    const totalStudents = rankingTable.ranking.length;
+    const students = await this.studentService.getAll();
+
+    return {
+      content: [
+        {
+          text: 'PW G-31 System',
+          alignment: 'right',
+          margin: [0, 0, 20, 20],
+        },
+        {
+          text: 'Ranking Actual del Aula',
+          style: 'header',
+          alignment: 'center',
+          bold: true,
+          fontSize: 20,
+          margin: [0, 0, 0, 20],
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto', '*', 'auto'],
+            body: [
+              [{ text: 'Pos.', style: 'tableHeader' }, { text: 'Estudiante', style: 'tableHeader' }, { text: 'Promedio', style: 'tableHeader' }],
+              ...rankingTable.ranking.map(row => [
+                row.position,
+                students.find(x => x.id === row.studentId)?.fullName || '',
+                row.avg
+              ]),
+              [{ text: '', colSpan: 2 }, {}, { text: `Total de Estudiantes: ${totalStudents}`, style: 'totalRow' }],
+            ],
+          },
+          layout: {
+            fillColor: (rowIndex) => (rowIndex === 0 ? '#f2f2f2' : null),
+            hLineColor: () => '#cccccc',
+            vLineColor: () => '#cccccc',
+          },
+        },
+      ],
+      footer: (currentPage, pageCount) => {
+        return [
+          {
+            columns: [
+              {
+                text: ` Fecha: ${today}`,
+                alignment: 'left',
+              },
+              {
+                text: `Página ${currentPage} de ${pageCount} `,
+                alignment: 'right',
+              },
+            ],
+            margin: [0, 10],
+          },
+        ];
+      },
+      styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+        },
+        tableHeader: {
+          fillColor: '#4CAF50',
+          color: '#ffffff',
+          fontSize: 12,
+          bold: true,
+          alignment: 'center',
+        },
+        totalRow: {
+          bold: true,
+          fontSize: 12,
+        },
+      },
+      defaultStyle: {
+        fontSize: 12,
+      },
+    };
+  }
 
   public async exportStudentList() {
     const users = await this.pgService.users.find({ relations: ['student'] });
@@ -205,5 +301,96 @@ export default class ReportsService {
     return await workbook.xlsx.writeBuffer();
   }
 
-  public async exportGradesTable(username: string) {}
+  public async exportGradesTable(username: string) {
+    const gradesTable: GradesTableOutDto = await this.getGradesTable(username);
+
+    const documentDefinition = await this.createGradesTableDocumentDefinition(gradesTable);
+    return new Promise((resolve, reject) => {
+      const pdfDoc = (pdfMake as any).createPdf(documentDefinition);
+      pdfDoc.getBuffer((buffer) => {
+        resolve(buffer);
+      });
+    });
+  }
+
+  private async createGradesTableDocumentDefinition(gradeTable: GradesTableOutDto) {
+    const today = new Date().toLocaleDateString('es-ES');
+    const grades = await this.gradesService.getByStudentId(gradeTable.studentId);
+    const name = (await this.studentService.getById(gradeTable.studentId)).name;
+
+    return {
+      content: [
+        {
+          text: 'PW G-31 System',
+          alignment: 'right',
+          margin: [0, 0, 20, 20],
+        },
+        {
+          text: `Notas de ${name}`,
+          style: 'header',
+          alignment: 'center',
+          bold: true,
+          fontSize: 20,
+          margin: [0, 0, 0, 20],
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto', 'auto', '*'],
+            body: [
+              [{ text: 'Asignatura', style: 'tableHeader' }, { text: 'Nota', style: 'tableHeader' }, { text: 'Observaciones', style: 'tableHeader' }],
+              ...gradeTable.gradeTable.map(row => [
+                row.assessmentName,
+                row.grade  || '---',
+                grades.find(x => x.id == row.gradeId)?.professorNote ?? '---',
+              ]),
+              [{ text: '', colSpan: 2 }, {}, { text: `Promedio: ${gradeTable.avg > 0 ? gradeTable.avg.toFixed(2) : '---'}`, style: 'totalRow' }],
+            ],
+          },
+          layout: {
+            fillColor: (rowIndex) => (rowIndex === 0 ? '#f2f2f2' : null),
+            hLineColor: () => '#cccccc',
+            vLineColor: () => '#cccccc',
+          },
+        },
+      ],
+      footer: (currentPage, pageCount) => {
+        return [
+          {
+            columns: [
+              {
+                text: ` Fecha: ${today}`,
+                alignment: 'left',
+              },
+              {
+                text: `Página ${currentPage} de ${pageCount} `,
+                alignment: 'right',
+              },
+            ],
+            margin: [0, 10],
+          },
+        ];
+      },
+      styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+        },
+        tableHeader: {
+          fillColor: '#4CAF50',
+          color: '#ffffff',
+          fontSize: 12,
+          bold: true,
+          alignment: 'center',
+        },
+        totalRow: {
+          bold: true,
+          fontSize: 12,
+        },
+      },
+      defaultStyle: {
+        fontSize: 12,
+      },
+    };
+  }
 }
