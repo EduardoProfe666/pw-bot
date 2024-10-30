@@ -266,7 +266,8 @@ export default class TelegramService {
       `);
     } else {
       const url = this.configService.get<string>('APP_UI')
-      ctx.reply(`Hola ${name} 😊, Aquí tienes el enlace a la Web App: ${url} `);
+      ctx.reply(`Hola ${name} 😊, Aún está en desarrollo 🚧.`);
+      // ctx.reply(`Hola ${name} 😊, Aquí tienes el enlace a la Web App: ${url} `);
     }
   }
 

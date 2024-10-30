@@ -11,10 +11,12 @@ import UsersModule from './users/users.module';
 import InfrastructureModule from './infrastructure/infrastructureModule';
 import ReportsModule from './reports/reports.module';
 import MailModule from './mail/mail.module';
+import { configSchema } from './utils/config.schema';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      validationSchema: configSchema,
       isGlobal: true,
     }),
     CacheModule.register({
