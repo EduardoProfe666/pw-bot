@@ -196,7 +196,7 @@ export default class ForgotPasswordTemplate {
                       <td class="pad" style="width:100%;">
                         <div align="center" class="alignment" style="line-height:10px">
                           <div style="max-width: 500px;"><img alt="Wrong Password Animation" height="auto"
-                                                              src="https://raw.githubusercontent.com/EduardoProfe666/vue-proyectos/refs/heads/main/images/GIF_password.gif"
+                                                              src="https://raw.githubusercontent.com/EduardoProfe666/pw-bot/refs/heads/main/images/GIF_password.gif"
                                                               style="display: block; height: auto; border: 0; width: 100%;"
                                                               title="Wrong Password Animation" width="500" /></div>
                         </div>
@@ -342,11 +342,11 @@ Go F*ck Yourself 😊" rel="noopener" style="text-decoration: none; color: #ffff
                                  width="104px">
                             <tr>
                               <td style="padding:0 10px 0 10px;"><a href="https://t.me/pw_g31_bot" target="_blank"><img
-                                alt="Telegram" height="auto" src="https://raw.githubusercontent.com/EduardoProfe666/vue-proyectos/refs/heads/main/images/telegram2x.png"
+                                alt="Telegram" height="auto" src="https://raw.githubusercontent.com/EduardoProfe666/pw-bot/refs/heads/main/images/telegram2x.png"
                                 style="display: block; height: auto; border: 0;" title="PW G-31 Bot" width="32" /></a>
                               </td>
                               <td style="padding:0 10px 0 10px;"><a href="https://ok.ru" target="_blank"><img
-                                alt="Web App" height="auto" src="https://raw.githubusercontent.com/EduardoProfe666/vue-proyectos/refs/heads/main/images/odnoklassniki2x.png"
+                                alt="Web App" height="auto" src="https://raw.githubusercontent.com/EduardoProfe666/pw-bot/refs/heads/main/images/odnoklassniki2x.png"
                                 style="display: block; height: auto; border: 0;" title="PW G-31 App" width="32" /></a>
                               </td>
                             </tr>
