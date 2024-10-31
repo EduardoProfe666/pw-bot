@@ -204,7 +204,7 @@ export default class TelegramService {
       2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
       `);
     } else {
-      let res = `¡Claro que sí ${name} 😊! Aquí te muestro el ranking actual del aula (Sin los convalidados)📈:\n\n`;
+      let res = `¡Claro que sí ${name} 😊! Aquí te muestro el ranking actual del aula sin los convalidados📈:\n\n`;
       res += '```\n' + (await this.generateRankingTable()) + '```';
       await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' });
     }
