@@ -190,7 +190,8 @@ export default class ReportsService {
       username: user.username,
       email: user.email,
       student: user.student,
-    }));
+    })).filter(x => x.username !== this.PROFESSOR_USERNAME)
+      .sort((a,b) => a.student.fullName.localeCompare(b.student.fullName));
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Lista de Estudiantes del G-31');
