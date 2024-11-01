@@ -81,6 +81,17 @@ export default class GradesService {
     return countGrades > 0 ? parseFloat((totalGrades / countGrades).toFixed(2)) : 0;
 
   }
+
+  public async getCountByStudentId(id: number): Promise<number> {
+    const student = await this.pgService.students.findOne({ where: { id }, relations: ['grades'] });
+
+    if (!student) {
+      throw new NotFoundException(`Student with ID ${id} not found`);
+    }
+
+    return student.grades?.length ?? 0 ;
+  }
+
   public async getAvgByStudentUsername(
     username: string
   ): Promise<number>{

@@ -12,6 +12,7 @@ import InfrastructureModule from './infrastructure/infrastructureModule';
 import ReportsModule from './reports/reports.module';
 import MailModule from './mail/mail.module';
 import { configSchema } from './utils/config.schema';
+import DataModule from './data/data.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { configSchema } from './utils/config.schema';
     // }]),
     AssessmentsModule,
     AuthModule,
+    DataModule,
     DatabaseModule,
     GradesModule,
     InfrastructureModule,

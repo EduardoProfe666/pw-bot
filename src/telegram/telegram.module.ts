@@ -10,6 +10,7 @@ import DatabaseModule from '../database/database.module';
 import AuthModule from '../auth/auth.module';
 import UsersModule from '../users/users.module';
 import ReportsModule from '../reports/reports.module';
+import DataModule from '../data/data.module';
 
 
 @Module({
@@ -25,6 +26,7 @@ import ReportsModule from '../reports/reports.module';
     }),
     AuthModule,
     UsersModule,
+    DataModule,
     ReportsModule,
     GradesModule,
     StudentsModule,

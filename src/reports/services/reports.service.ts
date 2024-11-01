@@ -28,35 +28,63 @@ export default class ReportsService {
 
   public async getRankingTable(): Promise<RankingTableOutDto> {
     const students = await this.studentService.getAll();
+    const grades = await this.gradesService.getAll();
     const rankingMap = new Map<
       number,
-      { studentId: number; average: number }
+      { studentId: number; average: number; count: number }
     >();
+    const getAvgCount = (studentId: number) => {
+      const gradess = grades.filter((grade) => grade.studentId === studentId);
+      if (gradess) {
+        let totalGrades = 0;
+        let countGrades = 0;
 
+        gradess.forEach((grade) => {
+          if (grade.grade) {
+            totalGrades += grade.grade;
+            countGrades++;
+          }
+        });
+
+        const average =
+          countGrades > 0
+            ? parseFloat((totalGrades / countGrades).toFixed(2))
+            : 0;
+        return { average, count: countGrades };
+      }
+      return { average: 0, count: 0 };
+    };
     for (const student of students.filter(
       (x) => x.username !== this.PROFESSOR_USERNAME && !x.isRecognized,
     )) {
-      const average = await this.gradesService.getAvgByStudentId(student.id);
-
-      rankingMap.set(student.id, { studentId: student.id, average });
+      const { average, count } = getAvgCount(student.id);
+      rankingMap.set(student.id, { studentId: student.id, average, count });
     }
 
     const rankingArray = Array.from(rankingMap.values()).sort((a, b) => {
-      if (a.average === 0 && b.average === 0) return 0;
-      if (a.average === 0) return 1;
-      if (b.average === 0) return -1;
+      if (a.average === b.average) {
+        return b.count - a.count;
+      }
       return b.average - a.average;
     });
 
     const rankingRows: RankingRow[] = [];
 
     let pos = 0;
-    let prevAvg = -1;
+    let prevAvg = null;
+    let prevCount = null;
 
-    for (const { studentId, average } of rankingArray) {
+    for (const { studentId, average, count } of rankingArray) {
       if (average !== prevAvg) {
         pos += 1;
         prevAvg = average;
+      } else if (count !== prevCount) {
+        if(prevCount === null)
+          prevCount = count;
+        else{
+          pos += 1;
+          prevCount = count;
+        }
       }
       rankingRows.push({ studentId: studentId, avg: average, position: pos });
     }
@@ -91,17 +119,19 @@ export default class ReportsService {
   public async exportRankingTable() {
     const rankingTable: RankingTableOutDto = await this.getRankingTable();
 
-    const documentDefinition = await this.createRankingTableDocumentDefinition(rankingTable);
+    const documentDefinition =
+      await this.createRankingTableDocumentDefinition(rankingTable);
     return new Promise((resolve, reject) => {
       const pdfDoc = (pdfMake as any).createPdf(documentDefinition);
       pdfDoc.getBuffer((buffer) => {
         resolve(buffer);
       });
     });
-
   }
 
-  private async createRankingTableDocumentDefinition(rankingTable: RankingTableOutDto) {
+  private async createRankingTableDocumentDefinition(
+    rankingTable: RankingTableOutDto,
+  ) {
     const today = new Date().toLocaleDateString('es-ES');
     const totalStudents = rankingTable.ranking.length;
     const students = await this.studentService.getAll();
@@ -126,13 +156,27 @@ export default class ReportsService {
             headerRows: 1,
             widths: ['auto', '*', 'auto'],
             body: [
-              [{ text: 'Pos.', style: 'tableHeader' }, { text: 'Estudiante', style: 'tableHeader' }, { text: 'Promedio', style: 'tableHeader' }],
-              ...rankingTable.ranking.map(row => [
+              [
+                { text: 'Pos.', style: 'tableHeader' },
+                { text: 'Estudiante', style: 'tableHeader' },
+                {
+                  text: 'Promedio',
+                  style: 'tableHeader',
+                },
+              ],
+              ...rankingTable.ranking.map((row) => [
                 row.position,
-                students.find(x => x.id === row.studentId)?.fullName || '',
-                row.avg
+                students.find((x) => x.id === row.studentId)?.fullName || '',
+                row.avg,
               ]),
-              [{ text: '', colSpan: 2 }, {}, { text: `Total de Estudiantes: ${totalStudents}`, style: 'totalRow' }],
+              [
+                { text: '', colSpan: 2 },
+                {},
+                {
+                  text: `Total de Estudiantes: ${totalStudents}`,
+                  style: 'totalRow',
+                },
+              ],
             ],
           },
           layout: {
@@ -185,13 +229,15 @@ export default class ReportsService {
   public async exportStudentList() {
     const users = await this.pgService.users.find({ relations: ['student'] });
 
-    const userDtos: UserWithStudentOutDto[] = users.map((user) => ({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      student: user.student,
-    })).filter(x => x.username !== this.PROFESSOR_USERNAME)
-      .sort((a,b) => a.student.fullName.localeCompare(b.student.fullName));
+    const userDtos: UserWithStudentOutDto[] = users
+      .map((user) => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        student: user.student,
+      }))
+      .filter((x) => x.username !== this.PROFESSOR_USERNAME)
+      .sort((a, b) => a.student.fullName.localeCompare(b.student.fullName));
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Lista de Estudiantes del G-31');
@@ -212,7 +258,9 @@ export default class ReportsService {
     let studentCount = userDtos.length;
 
     for (const user of userDtos) {
-      const average = await this.gradesService.getAvgByStudentUsername(user.username);
+      const average = await this.gradesService.getAvgByStudentUsername(
+        user.username,
+      );
       totalAverage += average;
 
       const row = worksheet.addRow({
@@ -232,12 +280,15 @@ export default class ReportsService {
           top: { style: 'thin' },
           left: { style: 'thin' },
           bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          right: { style: 'thin' },
         };
       });
     }
 
-    const averageOfAverages = studentCount > 0 && totalAverage > 0 ? (totalAverage / studentCount).toFixed(2) : '---';
+    const averageOfAverages =
+      studentCount > 0 && totalAverage > 0
+        ? (totalAverage / studentCount).toFixed(2)
+        : '---';
 
     worksheet.addRow([]);
 
@@ -249,19 +300,19 @@ export default class ReportsService {
       averageOfAverages,
     ]);
 
-    aggregationRow.eachCell(( cell) => {
+    aggregationRow.eachCell((cell) => {
       cell.font = { bold: true };
       cell.alignment = { horizontal: 'center' };
       cell.border = {
         top: { style: 'thin' },
         left: { style: 'thin' },
         bottom: { style: 'thin' },
-        right: { style: 'thin' }
+        right: { style: 'thin' },
       };
       cell.fill = {
         type: 'pattern',
-        pattern:'solid',
-        fgColor:{argb:'FFDDDDDD'}
+        pattern: 'solid',
+        fgColor: { argb: 'FFDDDDDD' },
       };
     });
 
@@ -270,7 +321,7 @@ export default class ReportsService {
         top: { style: 'thin' },
         left: { style: 'thin' },
         bottom: { style: 'thin' },
-        right: { style: 'thin' }
+        right: { style: 'thin' },
       };
     });
 
@@ -295,10 +346,15 @@ export default class ReportsService {
 
     worksheet.columns.forEach((column) => {
       const maxLength = column.values
-        .filter(value => typeof value === 'string' || typeof value === 'number')
-        .reduce((max, value) => Math.max(max as number, value.toString().length), 0);
+        .filter(
+          (value) => typeof value === 'string' || typeof value === 'number',
+        )
+        .reduce(
+          (max, value) => Math.max(max as number, value.toString().length),
+          0,
+        );
 
-      column.width = maxLength as number + 8;
+      column.width = (maxLength as number) + 8;
     });
 
     workbook.creator = 'EduardoProfe666';
@@ -309,7 +365,8 @@ export default class ReportsService {
   public async exportGradesTable(username: string) {
     const gradesTable: GradesTableOutDto = await this.getGradesTable(username);
 
-    const documentDefinition = await this.createGradesTableDocumentDefinition(gradesTable);
+    const documentDefinition =
+      await this.createGradesTableDocumentDefinition(gradesTable);
     return new Promise((resolve, reject) => {
       const pdfDoc = (pdfMake as any).createPdf(documentDefinition);
       pdfDoc.getBuffer((buffer) => {
@@ -318,9 +375,13 @@ export default class ReportsService {
     });
   }
 
-  private async createGradesTableDocumentDefinition(gradeTable: GradesTableOutDto) {
+  private async createGradesTableDocumentDefinition(
+    gradeTable: GradesTableOutDto,
+  ) {
     const today = new Date().toLocaleDateString('es-ES');
-    const grades = await this.gradesService.getByStudentId(gradeTable.studentId);
+    const grades = await this.gradesService.getByStudentId(
+      gradeTable.studentId,
+    );
     const name = (await this.studentService.getById(gradeTable.studentId)).name;
 
     return {
@@ -343,13 +404,30 @@ export default class ReportsService {
             headerRows: 1,
             widths: ['auto', 'auto', '*'],
             body: [
-              [{ text: 'Asignatura', style: 'tableHeader' }, { text: 'Nota', style: 'tableHeader' }, { text: 'Observaciones', style: 'tableHeader' }],
-              ...gradeTable.gradeTable.map(row => [
+              [
+                { text: 'Asignatura', style: 'tableHeader' },
+                {
+                  text: 'Nota',
+                  style: 'tableHeader',
+                },
+                { text: 'Observaciones', style: 'tableHeader' },
+              ],
+              ...gradeTable.gradeTable.map((row) => [
                 row.assessmentName,
-                row.grade  || '---',
-                grades.find(x => x.id == row.gradeId)?.professorNote ?? '---',
+                row.grade || '---',
+                grades.find((x) => x.id == row.gradeId)?.professorNote ?? '---',
               ]),
-              [{ text: '', colSpan: 2 }, {}, { text: `Promedio: ${gradeTable.avg > 0 ? gradeTable.avg.toFixed(2) : '---'}`, style: 'totalRow' }],
+              [
+                {
+                  text: '',
+                  colSpan: 2,
+                },
+                {},
+                {
+                  text: `Promedio: ${gradeTable.avg > 0 ? gradeTable.avg.toFixed(2) : '---'}`,
+                  style: 'totalRow',
+                },
+              ],
             ],
           },
           layout: {
