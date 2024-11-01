@@ -66,7 +66,7 @@ export default class TelegramService {
     } else {
       let res = `¡Claro que sí ${name} 😊! Aquí te muestro un listado de tus notas hasta ahora 📝:\n\n`;
       res += '```\n' + (await this.generateGradesTable(username)) + '```';
-      await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' });
+      await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' },  this.getMainKeyboard(),);
     }
   }
 
@@ -91,6 +91,7 @@ export default class TelegramService {
       if (assessments.length === 0) {
         await ctx.reply(
           `Hola ${name} 😊, no tienes ninguna evaluación y por tanto ninguna observación por el momento 🤷‍♂️`,
+          this.getMainKeyboard(),
         );
       } else {
         const inlineKeyboard = assessments.map((name) => [
@@ -104,6 +105,7 @@ export default class TelegramService {
               inline_keyboard: inlineKeyboard,
             },
           },
+          this.getMainKeyboard(),
         );
       }
     }
@@ -130,7 +132,8 @@ export default class TelegramService {
               [{ text: 'Exportar el ranking actual', callback_data: 'export_ranking' }]
             ],
           },
-        }
+        },
+        this.getMainKeyboard(),
       );
     }
 
@@ -179,11 +182,13 @@ export default class TelegramService {
 
       if (grade) {
         await ctx.reply(
-          `Observaciones del profesor para ${assessmentName} 👀:\n\nHola ${name} 😊. ${grade.professorNote}`
+          `Observaciones del profesor para ${assessmentName} 👀:\n\nHola ${name} 😊. ${grade.professorNote}`,
+          this.getMainKeyboard(),
         );
       } else {
         await ctx.reply(
-          `Hola ${username} 😊. No hay observaciones disponibles para ${assessmentName} 🤷‍♂️.`
+          `Hola ${username} 😊. No hay observaciones disponibles para ${assessmentName} 🤷‍♂️.`,
+          this.getMainKeyboard(),
         );
       }
     }
@@ -206,7 +211,7 @@ export default class TelegramService {
     } else {
       let res = `¡Claro que sí ${name} 😊! Aquí te muestro el ranking actual del aula sin los convalidados📈:\n\n`;
       res += '```\n' + (await this.generateRankingTable()) + '```';
-      await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' });
+      await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' },  this.getMainKeyboard(),);
     }
   }
 
@@ -225,10 +230,10 @@ export default class TelegramService {
     } else {
       const st = await this.studentService.getByUsername(username);
       if(st.isRecognized){
-        await ctx.reply('Siiiiiuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu 🥳🥳🥳🥳🥳🎉🎉🎉🎉🪅🪩👯👯‍♂️👯‍♀️');
+        await ctx.reply('Siiiiiuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu 🥳🥳🥳🥳🥳🎉🎉🎉🎉🪅🪩👯👯‍♂️👯‍♀️',  this.getMainKeyboard(),);
       }
       else{
-        await ctx.reply('Nop, sorry 🫤');
+        await ctx.reply('Nop, sorry 🫤',  this.getMainKeyboard(),);
       }
     }
   }
@@ -248,7 +253,9 @@ export default class TelegramService {
     } else {
       const user = await this.userService.getByUsername(username);
       await this.authService.forgotPassword(user.email);
-      ctx.reply(`Hola ${name}, parece que somos un poco retrasad... digo olvidadiz@s 🥴. Revisa tu correo para resetear tu contraseña 🔑. Esperemos que esta vez no se te olvide 😊.`);
+      ctx.reply(`Hola ${name}, parece que somos un poco retrasad... digo olvidadiz@s 🥴. Revisa tu correo para resetear tu contraseña 🔑. Esperemos que esta vez no se te olvide 😊.`
+      ,  this.getMainKeyboard(),
+      );
     }
   }
 
@@ -266,8 +273,8 @@ export default class TelegramService {
       `);
     } else {
       const url = this.configService.get<string>('APP_UI')
-      ctx.reply(`Hola ${name} 😊, Aún está en desarrollo 🚧.`);
-      // ctx.reply(`Hola ${name} 😊, Aquí tienes el enlace a la Web App: ${url} `);
+      ctx.reply(`Hola ${name} 😊, Aún está en desarrollo 🚧.`,  this.getMainKeyboard(),);
+      // ctx.reply(`Hola ${name} 😊, Aquí tienes el enlace a la Web App: ${url} `, this.getMainKeyboard(),);
     }
   }
 
@@ -275,19 +282,20 @@ export default class TelegramService {
   async hearsHello(ctx: Context) {
     const name = await this.extractName(await this.getUsername(ctx));
 
-    await ctx.reply(`Hola ${name} 😊, cómo estas hoy 👋!`);
+    await ctx.reply(`Hola ${name} 😊, cómo estas hoy 👋!`, this.getMainKeyboard(),);
   }
 
   @Hears('¿Quién es tu creador? 🤔')
   async hearsCreator(ctx: Context) {
     await ctx.reply(
-      `Mi creador es @eduardoProfe666, su hermoso y sexy profe 😏`
+      `Mi creador es @eduardoProfe666, su hermoso y sexy profe 😏`,
+      this.getMainKeyboard(),
     );
   }
 
   @On('sticker')
   async on(ctx: Context) {
-    await ctx.reply('👋');
+    await ctx.reply('👋',  this.getMainKeyboard(),);
   }
 
   @On('text')
@@ -295,10 +303,11 @@ export default class TelegramService {
     const name = await this.extractName(await this.getUsername(ctx));
 
     await ctx.reply(
-      `Lo siento ${name}, pero no te entendí 🥴... No soy ChatGPT, estúpid@ 😃`
+      `Lo siento ${name}, pero no te entendí 🥴... No soy ChatGPT, estúpid@ 😃`,
+      this.getMainKeyboard(),
     );
   }
-
+    
   private async getUsername(ctx: Context): Promise<string> {
     return ctx.from.username || this.defaultUsernameMessage;
   }
