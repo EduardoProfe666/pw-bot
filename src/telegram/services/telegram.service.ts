@@ -21,6 +21,7 @@ const mkdirAsync = promisify(fs.mkdir);
 export default class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
   private readonly defaultUsernameMessage = 'Imbécil sin "@"';
+  private homeworkWaitingMap: Map<string, string> = new Map<string, string>();
 
   constructor(
     private readonly authService: AuthService,
@@ -29,7 +30,7 @@ export default class TelegramService {
     private readonly assessmentsService: AssessmentsService,
     private readonly gradesService: GradesService,
     private readonly reportService: ReportsService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   @Start()
@@ -66,7 +67,11 @@ export default class TelegramService {
     } else {
       let res = `¡Claro que sí ${name} 😊! Aquí te muestro un listado de tus notas hasta ahora 📝:\n\n`;
       res += '```\n' + (await this.generateGradesTable(username)) + '```';
-      await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' },  this.getMainKeyboard(),);
+      await ctx.reply(
+        res.replace(/!/g, '\\!'),
+        { parse_mode: 'MarkdownV2' },
+        this.getMainKeyboard(),
+      );
     }
   }
 
@@ -81,7 +86,7 @@ export default class TelegramService {
       1. No eres del grupo 31 🫵.
       2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
       `);
-    } else { 
+    } else {
       const assessments = (
         await this.gradesService.getByStudentUsername(username)
       )
@@ -129,14 +134,56 @@ export default class TelegramService {
           reply_markup: {
             inline_keyboard: [
               [{ text: 'Exportar mis notas', callback_data: 'export_notes' }],
-              [{ text: 'Exportar el ranking actual', callback_data: 'export_ranking' }]
+              [
+                {
+                  text: 'Exportar el ranking actual',
+                  callback_data: 'export_ranking',
+                },
+              ],
             ],
           },
         },
         this.getMainKeyboard(),
       );
     }
+  }
 
+  @Hears('Entrega de Tareas 🤠')
+  async hearsHomeworks(ctx: Context) {
+    const username = await this.getUsername(ctx);
+    const name = await this.extractName(username);
+
+    if (name === username) {
+      await ctx.reply(`
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
+      1. No eres del grupo 31 🫵.
+      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      `);
+    } else {
+      const homeworks =
+        await this.gradesService.missingGradeAssessmentsByUsername(username);
+
+      if (homeworks.length === 0) {
+        await ctx.reply(
+          `Hola ${name} 😊, no tienes ninguna entrega programada por el momento 🤷‍♂️...`,
+          this.getMainKeyboard(),
+        );
+      } else {
+        const inlineKeyboard = homeworks.map((name) => [
+          { text: name, callback_data: `homework-${name}` },
+        ]);
+
+        await ctx.reply(
+          `Hola ${name} 😊, selecciona una entrega pendiente 👽:`,
+          {
+            reply_markup: {
+              inline_keyboard: inlineKeyboard,
+            },
+          },
+          this.getMainKeyboard(),
+        );
+      }
+    }
   }
 
   @On('callback_query')
@@ -146,7 +193,7 @@ export default class TelegramService {
     const name = await this.extractName(username);
     let filePath: string;
 
-    if(callbackData === 'export_notes' || callbackData === 'export_ranking') {
+    if (callbackData === 'export_notes' || callbackData === 'export_ranking') {
       try {
         // Create temp directory if it doesn't exist
         const tempDir = path.join(__dirname, 'temp');
@@ -157,12 +204,12 @@ export default class TelegramService {
         if (callbackData === 'export_notes') {
           const buffer = await this.reportService.exportGradesTable(username);
           filePath = path.join(tempDir, 'Tus_Notas.pdf');
-          fs.writeFileSync(filePath, (buffer as string));
+          fs.writeFileSync(filePath, buffer as string);
           await ctx.replyWithDocument({ source: filePath });
         } else if (callbackData === 'export_ranking') {
           const buffer = await this.reportService.exportRankingTable();
           filePath = path.join(tempDir, 'Ranking_Actual.pdf');
-          fs.writeFileSync(filePath, (buffer as string));
+          fs.writeFileSync(filePath, buffer as string);
           await ctx.replyWithDocument({ source: filePath });
         }
 
@@ -171,10 +218,16 @@ export default class TelegramService {
         }
       } catch (error) {
         this.logger.error('Error generating report:', error);
-        await ctx.reply('Error generando el reporte 😕. Por favor intenta de nuevo más tarde 👾.');
+        await ctx.reply(
+          'Error generando el reporte 😕. Por favor intenta de nuevo más tarde 👾.',
+        );
       }
-    }
-    else{
+    } else if (callbackData.includes('homework-')) {
+      this.homeworkWaitingMap[username] = callbackData.replace('homework-', '');
+      await ctx.reply(
+        `A continuación envíame tu tarea 😊... Ya veremos como lo hiciste 😜...`,
+      );
+    } else {
       const assessmentName = callbackData;
       const grade = (
         await this.gradesService.getByStudentUsername(username)
@@ -196,6 +249,49 @@ export default class TelegramService {
     await ctx.answerCbQuery();
   }
 
+  @On('document')
+  async handleDocument(ctx: Context) {
+    const username = await this.getUsername(ctx);
+    const name = await this.extractName(username);
+
+    if (name === username) {
+      await ctx.reply(`
+      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
+      1. No eres del grupo 31 🫵.
+      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      `);
+    } else if (!this.homeworkWaitingMap[username]) {
+      await ctx.reply(
+        'Para que me mandas eso 🤨... Hasta donde sé no has seleccionado ninguna entrega 🤓... No tendré el intelecto de ChatGPT, pero tú tampoco 😊.',
+      );
+    } else {
+      const file = ctx.message.document;
+      const fileName = file.file_name;
+      const fileExtension = fileName.split('.').pop().toLowerCase();
+
+      if (fileExtension === 'zip' || fileExtension === 'rar') {
+        const student = await this.studentService.getByUsername(username);
+
+        await ctx.telegram.sendDocument('eduardoProfe666', file.file_id, {
+          caption: `
+          Entrega de Tarea:
+          - Evaluación: ${this.homeworkWaitingMap[username]}
+          - Estudiante: ${name}
+          - Nombre de Usuario: ${username}
+          - Id de Estudiante: ${student.id}
+          `,
+        });
+
+        this.homeworkWaitingMap[username] = undefined;
+        await ctx.reply(`Recibido ${name} 😊... Estás ahora en manos del jefe 🫡...`);
+      } else {
+        await ctx.reply(
+          'Serás estúpid@ 😮‍💨... Como piensas que mi creador va a revisarte si no se lo mandas tu entrega comprimida en un .zip o en un .rar 🤨',
+        );
+      }
+    }
+  }
+
   @Hears('Ranking del aula 📈')
   async hearsRanking(ctx: Context) {
     const username = await this.getUsername(ctx);
@@ -211,7 +307,11 @@ export default class TelegramService {
     } else {
       let res = `¡Claro que sí ${name} 😊! Aquí te muestro el ranking actual del aula sin los convalidados📈:\n\n`;
       res += '```\n' + (await this.generateRankingTable()) + '```';
-      await ctx.reply(res.replace(/!/g, '\\!'), { parse_mode: 'MarkdownV2' },  this.getMainKeyboard(),);
+      await ctx.reply(
+        res.replace(/!/g, '\\!'),
+        { parse_mode: 'MarkdownV2' },
+        this.getMainKeyboard(),
+      );
     }
   }
 
@@ -229,11 +329,13 @@ export default class TelegramService {
       `);
     } else {
       const st = await this.studentService.getByUsername(username);
-      if(st.isRecognized){
-        await ctx.reply('Siiiiiuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu 🥳🥳🥳🥳🥳🎉🎉🎉🎉🪅🪩👯👯‍♂️👯‍♀️',  this.getMainKeyboard(),);
-      }
-      else{
-        await ctx.reply('Nop, sorry 🫤',  this.getMainKeyboard(),);
+      if (st.isRecognized) {
+        await ctx.reply(
+          'Siiiiiuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu 🥳🥳🥳🥳🥳🎉🎉🎉🎉🪅🪩👯👯‍♂️👯‍♀️',
+          this.getMainKeyboard(),
+        );
+      } else {
+        await ctx.reply('Nop, sorry 🫤', this.getMainKeyboard());
       }
     }
   }
@@ -253,8 +355,9 @@ export default class TelegramService {
     } else {
       const user = await this.userService.getByUsername(username);
       await this.authService.forgotPassword(user.email);
-      ctx.reply(`Hola ${name}, parece que somos un poco retrasad... digo olvidadiz@s 🥴. Revisa tu correo para resetear tu contraseña 🔑. Esperemos que esta vez no se te olvide 😊.`
-      ,  this.getMainKeyboard(),
+      ctx.reply(
+        `Hola ${name}, parece que somos un poco retrasad... digo olvidadiz@s 🥴. Revisa tu correo para resetear tu contraseña 🔑. Esperemos que esta vez no se te olvide 😊.`,
+        this.getMainKeyboard(),
       );
     }
   }
@@ -272,8 +375,11 @@ export default class TelegramService {
       2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
       `);
     } else {
-      const url = this.configService.get<string>('APP_UI')
-      ctx.reply(`Hola ${name} 😊, Aún está en desarrollo 🚧.`,  this.getMainKeyboard(),);
+      const url = this.configService.get<string>('APP_UI');
+      ctx.reply(
+        `Hola ${name} 😊, Aún está en desarrollo 🚧.`,
+        this.getMainKeyboard(),
+      );
       // ctx.reply(`Hola ${name} 😊, Aquí tienes el enlace a la Web App: ${url} `, this.getMainKeyboard(),);
     }
   }
@@ -282,7 +388,10 @@ export default class TelegramService {
   async hearsHello(ctx: Context) {
     const name = await this.extractName(await this.getUsername(ctx));
 
-    await ctx.reply(`Hola ${name} 😊, cómo estas hoy 👋!`, this.getMainKeyboard(),);
+    await ctx.reply(
+      `Hola ${name} 😊, cómo estas hoy 👋!`,
+      this.getMainKeyboard(),
+    );
   }
 
   @Hears('¿Quién es tu creador? 🤔')
@@ -295,7 +404,7 @@ export default class TelegramService {
 
   @On('sticker')
   async on(ctx: Context) {
-    await ctx.reply('👋',  this.getMainKeyboard(),);
+    await ctx.reply('👋', this.getMainKeyboard());
   }
 
   @On('text')
@@ -307,7 +416,7 @@ export default class TelegramService {
       this.getMainKeyboard(),
     );
   }
-    
+
   private async getUsername(ctx: Context): Promise<string> {
     return ctx.from.username || this.defaultUsernameMessage;
   }
@@ -340,7 +449,10 @@ export default class TelegramService {
     res += `+${'-'.repeat(columnWidth + 2)}+------+\n`;
 
     for (const assessment of assessments) {
-      const grade = gradeTable.gradeTable.find(x => x.assessmentId == assessment.id)?.grade?.toFixed(2) ?? '---';
+      const grade =
+        gradeTable.gradeTable
+          .find((x) => x.assessmentId == assessment.id)
+          ?.grade?.toFixed(2) ?? '---';
       res += `| ${assessment.name.padEnd(columnWidth)} | ${grade.padEnd(4)} |\n`;
     }
 
@@ -356,12 +468,14 @@ export default class TelegramService {
 
   private async generateRankingTable(): Promise<string> {
     const rankingTable = await this.reportService.getRankingTable();
-    const studentIds = rankingTable.ranking.map(x => x.studentId);
-    const students = (await this.studentService.getAll()).filter(x =>  studentIds.includes(x.id));
+    const studentIds = rankingTable.ranking.map((x) => x.studentId);
+    const students = (await this.studentService.getAll()).filter((x) =>
+      studentIds.includes(x.id),
+    );
 
     let maxStudentNameLength = 'Estudiante'.length;
 
-    for(const student of students){
+    for (const student of students) {
       maxStudentNameLength = Math.max(
         maxStudentNameLength,
         student.name.length,
@@ -374,9 +488,8 @@ export default class TelegramService {
     res += `| No | ${'Estudiante'.padEnd(columnWidth)} | Nota |\n`;
     res += `+----+${'-'.repeat(columnWidth + 2)}+------+\n`;
 
-
     for (const { studentId, avg, position } of rankingTable.ranking) {
-      const st = students.find(x => x.id === studentId);
+      const st = students.find((x) => x.id === studentId);
       const average = avg > 0 ? avg.toFixed(2) : '---';
       res += `| ${position.toString().padEnd(2)} | ${st.name.padEnd(columnWidth)} | ${average.padEnd(4)} |\n`;
     }
@@ -396,10 +509,11 @@ export default class TelegramService {
             { text: 'Ranking del aula 📈' },
           ],
           [
-            {text: '¿Estoy convalidado? 🤓'},
-            {text: 'Se me olvidó mi contraseña 🫤'}
+            { text: '¿Estoy convalidado? 🤓' },
+            { text: 'Se me olvidó mi contraseña 🫤' },
           ],
-          [{text: 'Enlace a Web App ⚓'}, {text: 'Reportes 📄'}]
+          [{ text: 'Enlace a Web App ⚓' }, { text: 'Reportes 📄' }],
+          [{ text: 'Entrega de Tareas 🤠' }],
         ],
         resize_keyboard: true,
         one_time_keyboard: true,
