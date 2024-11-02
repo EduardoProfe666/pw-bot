@@ -22,6 +22,7 @@ export default class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
   private readonly defaultUsernameMessage = 'Imbécil sin "@"';
   private homeworkWaitingMap: Map<string, string> = new Map<string, string>();
+  private chatIdProfessor = '5317290019';
 
   constructor(
     private readonly authService: AuthService,
@@ -35,7 +36,8 @@ export default class TelegramService {
 
   @Start()
   async startCommand(ctx: Context) {
-    const name = await this.extractName(await this.getUsername(ctx));
+    const username = await this.getUsername(ctx);
+    const name = await this.extractName(username);
 
     await ctx.reply(
       `Hola ${name}, estoy aquí para ayudarte 😊. Presiona los botones de abajo para saber más 👇. ¿Qué deseas hacer hoy?`,
@@ -272,7 +274,7 @@ export default class TelegramService {
       if (fileExtension === 'zip' || fileExtension === 'rar') {
         const student = await this.studentService.getByUsername(username);
 
-        await ctx.telegram.sendDocument('eduardoProfe666', file.file_id, {
+        await ctx.telegram.sendDocument(this.chatIdProfessor, file.file_id, {
           caption: `
           Entrega de Tarea:
           - Evaluación: ${this.homeworkWaitingMap[username]}
@@ -280,13 +282,15 @@ export default class TelegramService {
           - Nombre de Usuario: ${username}
           - Id de Estudiante: ${student.id}
           `,
-        });
+        }); 
 
         this.homeworkWaitingMap[username] = undefined;
-        await ctx.reply(`Recibido ${name} 😊... Estás ahora en manos del jefe 🫡...`);
+        await ctx.reply(
+          `Recibido ${name} 😊... Estás ahora en manos del jefe 🫡...`,
+        );
       } else {
         await ctx.reply(
-          'Serás estúpid@ 😮‍💨... Como piensas que mi creador va a revisarte si no se lo mandas tu entrega comprimida en un .zip o en un .rar 🤨',
+          'Serás estúpid@ 😮‍💨... Como piensas que mi creador va a revisarte si no le mandas tu entrega comprimida en un .zip o en un .rar 🤨',
         );
       }
     }
