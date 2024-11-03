@@ -295,6 +295,16 @@ export default class TelegramService {
     }
   }
 
+  @On('photo')
+  async handlePhoto(ctx: Context) {
+    await ctx.reply(`Para que me mandas esa foto 🤨?`);
+  }
+
+  @On('video')
+  async handleVideo(ctx: Context) {
+    await ctx.reply(`Para que me mandas ese video 🤨?`);
+  }
+
   @Hears('Ranking del aula 📈')
   async hearsRanking(ctx: Context) {
     const username = await this.getUsername(ctx);

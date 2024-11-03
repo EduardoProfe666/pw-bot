@@ -11,6 +11,23 @@ export default class GradeNotificationTemplate{
   }
 
   getEmail(): string{
+    let gradeColor = '';
+    let firstComment = '';
+
+    if (this.grade >= 5) {
+      firstComment = 'Tremendo tanque 🥵';
+      gradeColor = '#4CAF50';
+    } else if (this.grade >= 4) {
+      firstComment = 'Super bien 👌';
+      gradeColor = '#FF9800';
+    } else if (this.grade >= 3) {
+      firstComment = 'El 3 es 3, y lo demás... 🤠';
+      gradeColor = '#ffe200';
+    } else if (this.grade >= 2) {
+      firstComment = 'Te tocó perder 🥲';
+      gradeColor = '#F44336';
+    }
+
     return `
     <html lang="es">
 <head>
@@ -57,6 +74,7 @@ export default class GradeNotificationTemplate{
       .note {
           font-size: 36px;
           font-weight: bold;
+          color: ${gradeColor};
       }
       .comments {
           margin-top: 10px;
@@ -94,7 +112,7 @@ export default class GradeNotificationTemplate{
     <div class="student-info">
       <h2>Hola <span id="studentName">${this.name}</span>👋,</h2>
       <p>El profe me dijo que ya te calificó 🥵.</p>
-      <p id="first-comment"></p>
+      <p id="first-comment">${firstComment}</p>
     </div>
     <div class="evaluation-details">
       <h3>Detalles de la Evaluación</h3>
