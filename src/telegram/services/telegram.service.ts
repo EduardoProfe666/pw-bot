@@ -4,7 +4,6 @@ import StudentsService from '../../students/services/students.service';
 import AssessmentsService from '../../assessments/services/assessments.service';
 import GradesService from '../../grades/services/grades.service';
 import { Context } from 'node:vm';
-import PgService from '../../database/services/pg.service';
 import { AuthService } from '../../auth/services/auth.service';
 import UsersService from '../../users/services/users.service';
 import ReportsService from '../../reports/services/reports.service';

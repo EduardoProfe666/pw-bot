@@ -11,12 +11,16 @@ import GradeOutDto from '../dto/out/grade.out.dto';
 import Grade from '../../database/entities/grade.entity';
 import GradeWithAssessmentOutDto from '../dto/out/grade-with-assessment.out.dto';
 import GradeInDto from '../dto/in/grade.in.dto';
+import MailService from '../../mail/services/mail.service';
 
 @Injectable()
 export default class GradesService {
   private readonly logger = new Logger(GradesService.name);
 
-  constructor(private readonly pgService: PgService) {}
+  constructor(
+    private readonly pgService: PgService,
+    private readonly mailService: MailService
+    ) {}
 
   public async getAll(): Promise<GradeOutDto[]> {
     const grades = await this.pgService.grades.find({
@@ -234,6 +238,9 @@ export default class GradesService {
 
     this.logger.log(`Created new grade with ID ${newGrade.id}`);
     this.logger.log({ ...dto });
+
+    await this.mailService.sendGradeNotificationEmail(student.user.email, student.name, assessment.name, dto.grade, dto.professorNote);
+
     return this.toOutDtoWithAssessment(newGrade);
   }
 

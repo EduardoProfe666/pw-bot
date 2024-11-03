@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import ForgotPasswordTemplate from '../templates/forgot-password.template';
+import GradeNotificationTemplate from '../templates/grade-notification.template';
 
 @Injectable()
 export default class MailService {
@@ -11,11 +12,34 @@ export default class MailService {
   ) {}
 
   private readonly logger = new Logger(MailService.name);
-  private readonly RESET_PASSWORD_SUBJECT: string = "Resetear Contraseña en PW G-31 App";
+  private readonly RESET_PASSWORD_SUBJECT: string =
+    'Resetear Contraseña en PW G-31 App';
+  private readonly GRADE_NOTIFICATION_SUBJECT: string =
+    'Notificación de calificación';
 
-  async sendResetPasswordEmail(email: string, name: string, token: string): Promise<void> {
+  async sendGradeNotificationEmail(
+    email: string,
+    name: string,
+    assessment: string,
+    grade: number,
+    professorNote: string,
+  ): Promise<void> {
+    const message = new GradeNotificationTemplate(
+      name,
+      assessment,
+      grade,
+      professorNote,
+    ).getEmail();
+    await this.sendMail(email, this.GRADE_NOTIFICATION_SUBJECT, message);
+  }
+
+  async sendResetPasswordEmail(
+    email: string,
+    name: string,
+    token: string,
+  ): Promise<void> {
     const resetUrl = `${this.configService.get<string>('EMAIL_RESET_PASSWORD_URL')}?token=${token}`;
-    this.logger.log(resetUrl)
+    this.logger.log(resetUrl);
     const message = new ForgotPasswordTemplate(
       this.configService.get<string>('APP_UI'),
       name,
