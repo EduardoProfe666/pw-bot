@@ -3,6 +3,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import ForgotPasswordTemplate from '../templates/forgot-password.template';
 import GradeNotificationTemplate from '../templates/grade-notification.template';
+import RankingNotificationTemplate from '../templates/ranking-notification.template';
 
 @Injectable()
 export default class MailService {
@@ -16,6 +17,7 @@ export default class MailService {
     'Resetear Contraseña en PW G-31 App';
   private readonly GRADE_NOTIFICATION_SUBJECT: string =
     'Notificación de calificación';
+  private readonly GRADE_RANKING_UPDATE: string = 'Actualización de tu pos. en el  Ranking'
 
   async sendGradeNotificationEmail(
     email: string,
@@ -31,6 +33,20 @@ export default class MailService {
       professorNote,
     ).getEmail();
     await this.sendMail(email, this.GRADE_NOTIFICATION_SUBJECT, message);
+  }
+
+  async sendRankingUpdateNotification(
+    email: string,
+    name: string,
+    prevPos: number,
+    actualPost: number,
+  ){
+    const message = new RankingNotificationTemplate(
+      name,
+      prevPos,
+      actualPost,
+    ).getEmail()
+    await this.sendMail(email, this.GRADE_RANKING_UPDATE, message);
   }
 
   async sendResetPasswordEmail(

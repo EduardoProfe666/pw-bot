@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import PgService from '../../database/services/pg.service';
 import * as ExcelJS from 'exceljs';
 import RankingTableOutDto, {
@@ -11,6 +11,7 @@ import AssessmentsService from '../../assessments/services/assessments.service';
 import UserWithStudentOutDto from '../../users/dto/out/user-with-student.out.dto';
 import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
+import MailService from '../../mail/services/mail.service';
 
 (pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
 
@@ -18,9 +19,10 @@ import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 export default class ReportsService {
   constructor(
     private readonly pgService: PgService,
+    @Inject(forwardRef(() => GradesService))
     private readonly gradesService: GradesService,
     private readonly studentService: StudentsService,
-    private readonly assessmentService: AssessmentsService,
+    private readonly mailService: MailService,
   ) {}
 
   private readonly logger = new Logger(ReportsService.name);
@@ -79,9 +81,8 @@ export default class ReportsService {
         pos += 1;
         prevAvg = average;
       } else if (count !== prevCount) {
-        if(prevCount === null)
-          prevCount = count;
-        else{
+        if (prevCount === null) prevCount = count;
+        else {
           pos += 1;
           prevCount = count;
         }
@@ -92,6 +93,33 @@ export default class ReportsService {
     return {
       ranking: rankingRows,
     };
+  }
+
+  public async checkPosChanges(prevRankingTable: RankingTableOutDto) {
+    const actualRankingTable = await this.getRankingTable();
+
+    const prevRanking = prevRankingTable.ranking;
+    const actualRanking = actualRankingTable.ranking;
+
+    const rankingStudentIds = prevRanking.map((x) => x.studentId);
+
+    const students = (
+      await this.pgService.students.find({ relations: ['user'] })
+    ).filter((x) => rankingStudentIds.includes(x.id));
+
+    for (const student of students) {
+      const prev = prevRanking.find((x) => x.studentId === student.id);
+      const actual = actualRanking.find((x) => x.studentId === student.id);
+
+      if (prev.position != actual.position) {
+        await this.mailService.sendRankingUpdateNotification(
+          student.user.email,
+          student.name,
+          prev.position,
+          actual.position,
+        );
+      }
+    }
   }
 
   public async getGradesTable(username: string): Promise<GradesTableOutDto> {

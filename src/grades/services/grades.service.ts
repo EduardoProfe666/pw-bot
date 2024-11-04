@@ -1,6 +1,6 @@
 import {
   BadRequestException,
-  ConflictException,
+  ConflictException, forwardRef,
   Inject,
   Injectable,
   Logger,
@@ -22,7 +22,8 @@ export default class GradesService {
   constructor(
     private readonly pgService: PgService,
     private readonly mailService: MailService,
-    // private readonly reportService: ReportsService,
+    @Inject(forwardRef(() => ReportsService))
+    private readonly reportService: ReportsService,
   ) {}
 
   public async getAll(): Promise<GradeOutDto[]> {
@@ -198,6 +199,8 @@ export default class GradesService {
       );
     }
 
+    const prevRankingTable = await  this.reportService.getRankingTable();
+
     const g = await this.pgService.grades.findOne({
       where: { student: student, assessment: assessment },
     });
@@ -216,6 +219,8 @@ export default class GradesService {
     await this.pgService.grades.save(grade);
     this.logger.log(`Updated grade with ID ${id}`);
     this.logger.log({ ...dto });
+
+    this.reportService.checkPosChanges(prevRankingTable);
   }
 
   public async post(dto: GradeInDto): Promise<GradeWithAssessmentOutDto> {
@@ -249,6 +254,8 @@ export default class GradesService {
       );
     }
 
+    const prevRankingTable = await  this.reportService.getRankingTable();
+
     const newGrade = this.pgService.grades.create({
       grade: dto.grade,
       professorNote: dto.professorNote,
@@ -269,7 +276,7 @@ export default class GradesService {
       dto.professorNote,
     );
 
-    // this.checkForRankingTableUpdates(await this.reportService.getRankingTable());
+    this.reportService.checkPosChanges(prevRankingTable);
 
     return this.toOutDtoWithAssessment(newGrade);
   }
@@ -281,12 +288,14 @@ export default class GradesService {
   // }
 
   public async delete(id: number): Promise<void> {
+    const prevRankingTable = await  this.reportService.getRankingTable();
     const result = await this.pgService.grades.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Grade with ID ${id} not found`);
     }
 
     this.logger.log(`Deleted Grade with ID ${id}`);
+    this.reportService.checkPosChanges(prevRankingTable);
   }
 
   private toOutDto(grade: Grade): GradeOutDto {

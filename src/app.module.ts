@@ -8,7 +8,7 @@ import TelegramModule from './telegram/telegram.module';
 import AuthModule from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import UsersModule from './users/users.module';
-import InfrastructureModule from './infrastructure/infrastructureModule';
+import InfrastructureModule from './infrastructure/infrastructure.module';
 import ReportsModule from './reports/reports.module';
 import MailModule from './mail/mail.module';
 import { configSchema } from './utils/config.schema';
