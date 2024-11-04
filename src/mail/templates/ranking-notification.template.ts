@@ -9,23 +9,7 @@ export default class RankingNotificationTemplate {
   ) {}
 
   private getCubaTime() {
-    const now = new Date();
-
-    const year = now.getFullYear();
-
-    const dstStart = new Date(year, 2, 1);
-    dstStart.setDate(7 - dstStart.getDay());
-
-    const dstEnd = new Date(year, 10, 1);
-    dstEnd.setDate(7 - dstEnd.getDay());
-
-    const isDST = now >= dstStart && now < dstEnd;
-    const cubaOffset = isDST ? -4 : -5;
-
-    const utcOffset = now.getTimezoneOffset() / 60;
-    return new Date(
-      now.getTime() + (cubaOffset + utcOffset) * 3600000,
-    ).toLocaleString('es-ES', {
+    return new Date().toLocaleString('es-ES', {
       timeZone: 'America/Havana',
       hour12: false,
     });
@@ -126,8 +110,8 @@ export default class RankingNotificationTemplate {
   <h2>Revisé el VAR y todo está legal 👌</h2>
 
   <div class="position">
-    <h3><span class="pos ${this.prevPos < this.actualPos ? 'minor' : 'greater' }">${this.prevPos}</span> ➡️ <span class="pos ${this.actualPos < this.prevPos ? 'minor' : 'greater' }">${this.actualPos}</span></h3>
-    <h3>${this.prevPos < this.actualPos ? "Congratulaciones 🥸" : "Te tocó perder 🤷‍♂️"}</h3>
+    <h3><span class="pos ${this.prevPos < this.actualPos ? 'greater' : 'minor' }">${this.prevPos}</span> ➡️ <span class="pos ${this.actualPos < this.prevPos ? 'greater' : 'minor' }">${this.actualPos}</span></h3>
+    <h3>${this.prevPos < this.actualPos ? "Te tocó perder 🤷‍♂️" : "Congratulaciones 🥸"}</h3>
   </div>
 
   <div class="footer">¡Sigue participando para subir en el ranking 🤓!</div>
