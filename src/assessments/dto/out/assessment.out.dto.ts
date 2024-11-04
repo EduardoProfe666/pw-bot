@@ -6,4 +6,7 @@ export default class AssessmentOutDto{
 
   @ApiProperty()
   name: string;
+
+  @ApiProperty()
+  onGoing: boolean;
 }

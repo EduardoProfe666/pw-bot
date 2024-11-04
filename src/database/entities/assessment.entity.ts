@@ -9,6 +9,9 @@ export default class Assessment{
   @Column('character varying', { length: 255 })
   name: string;
 
+  @Column('boolean')
+  onGoing: boolean;
+
   @OneToMany(() => Grade, grade => grade.assessment)
   grades: Grade[];
 }

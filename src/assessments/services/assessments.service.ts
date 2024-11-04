@@ -88,6 +88,7 @@ export default class AssessmentsService {
     return {
       id: assessment.id,
       name: assessment.name,
+      onGoing: assessment.onGoing
     };
   }
 }
