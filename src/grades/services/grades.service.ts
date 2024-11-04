@@ -22,7 +22,7 @@ export default class GradesService {
   constructor(
     private readonly pgService: PgService,
     private readonly mailService: MailService,
-    private readonly reportService: ReportsService,
+    // private readonly reportService: ReportsService,
   ) {}
 
   public async getAll(): Promise<GradeOutDto[]> {
@@ -269,16 +269,16 @@ export default class GradesService {
       dto.professorNote,
     );
 
-    this.checkForRankingTableUpdates(await this.reportService.getRankingTable());
+    // this.checkForRankingTableUpdates(await this.reportService.getRankingTable());
 
     return this.toOutDtoWithAssessment(newGrade);
   }
 
-  private async checkForRankingTableUpdates(previousRankingTable: RankingTableOutDto){
-    const currentRankingTable = await this.reportService.getRankingTable();
-
-
-  }
+  // private async checkForRankingTableUpdates(previousRankingTable: RankingTableOutDto){
+  //   const currentRankingTable = await this.reportService.getRankingTable();
+  //
+  //
+  // }
 
   public async delete(id: number): Promise<void> {
     const result = await this.pgService.grades.delete(id);

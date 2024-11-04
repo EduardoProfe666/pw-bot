@@ -12,7 +12,6 @@ import ReportsModule from '../reports/reports.module';
     AuthModule,
     DatabaseModule,
     MailModule,
-    ReportsModule
   ],
   controllers: [V1GradesController],
   providers: [GradesService],
