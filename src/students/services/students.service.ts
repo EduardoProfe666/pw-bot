@@ -1,24 +1,25 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import PgService from '../../database/services/pg.service';
 import Student from '../../database/entities/student.entity';
 import StudentOutDto from '../dto/out/student.out.dto';
 import StudentInDto from '../dto/in/student.in.dto';
+import TelegramUtilsService from '../../telegram/services/telegram-utils.service';
 
 @Injectable()
 export default class StudentsService {
   private readonly logger = new Logger(StudentsService.name);
 
-  constructor(private readonly pgService: PgService) {}
+  constructor(
+    private readonly pgService: PgService,
+    @Inject(forwardRef(() => TelegramUtilsService))
+    private readonly telegramUtilsService: TelegramUtilsService,
+  ) {}
 
   public async getAll(): Promise<StudentOutDto[]> {
     const students = await this.pgService.students.find({
-      relations: ['user']
+      relations: ['user'],
     });
-    return students.map((st) => this.toOutDto(st));
+    return Promise.all(students.map(async (st) => await this.toOutDto(st)));
   }
 
   public async getById(id: number): Promise<StudentOutDto> {
@@ -37,10 +38,14 @@ export default class StudentsService {
       relations: ['user'],
     });
 
-    const student = students.find(x => x.user && x.user.username === username);
+    const student = students.find(
+      (x) => x.user && x.user.username === username,
+    );
 
     if (!student) {
-      throw new NotFoundException(`Student with username @${username} not found`);
+      throw new NotFoundException(
+        `Student with username @${username} not found`,
+      );
     }
     return this.toOutDto(student);
   }
@@ -67,17 +72,20 @@ export default class StudentsService {
     this.logger.log(`Deleted student with ID ${id}`);
   }
 
-  private toOutDto(student: Student): StudentOutDto {
+  private async toOutDto(student: Student): Promise<StudentOutDto> {
+    const username = student.user?.username ?? '';
+    const avatar = await this.telegramUtilsService.getProfilePhotoUrl();
     return {
       id: student.id,
       name: student.name,
-      username: student.user?.username ?? "",
+      username: student.user?.username ?? '',
       fullName: student.fullName,
       userId: student.user?.id ?? 0,
       isRecognized: student.isRecognized,
       listNumber: student.listNumber,
       isCarryForward: student.isCarryForward,
-      isRepeater: student.isRepeater
+      isRepeater: student.isRepeater,
+      avatar: avatar,
     };
   }
 }

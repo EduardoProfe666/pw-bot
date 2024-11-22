@@ -14,7 +14,7 @@ import InfrastructureModule from '../infrastructure/infrastructure.module';
   imports: [
     AuthModule,
     AssessmentsModule,
-    StudentsModule,
+    forwardRef(() => StudentsModule),
     forwardRef(() => GradesModule),
     MailModule,
     DatabaseModule

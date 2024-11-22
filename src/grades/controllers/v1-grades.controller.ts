@@ -57,6 +57,16 @@ export default class V1GradesController {
     return this.service.getById(id);
   }
 
+  @Get('/missing/:id')
+  @Roles('admin')
+  @ApiOkResponse({description: "Ok", type: [String]})
+  @ApiNotFoundResponse({description: "Not Found"})
+  @ApiBadRequestResponse({description: "Bad Request"})
+  @ApiOperation({summary: 'Get missing grades by students id'})
+  async getMissingGradesById(@Param('id', ParseIntPipe) id: number){
+    return this.service.missingGradeAssessmentsById(id);
+  }
+
   @Get('/avg/:id')
   @Roles('admin')
   @ApiOkResponse({description: "Ok", type: AvgGradeOutDto})

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TelegrafModule } from 'nestjs-telegraf';
 import GradesModule from '../grades/grades.module';
@@ -11,6 +11,7 @@ import AuthModule from '../auth/auth.module';
 import UsersModule from '../users/users.module';
 import ReportsModule from '../reports/reports.module';
 import DataModule from '../data/data.module';
+import TelegramUtilsService from './services/telegram-utils.service';
 
 
 @Module({
@@ -27,13 +28,14 @@ import DataModule from '../data/data.module';
     AuthModule,
     UsersModule,
     DataModule,
-    ReportsModule,
-    GradesModule,
-    StudentsModule,
+    forwardRef(() => ReportsModule),
+    forwardRef(() => GradesModule),
+    forwardRef(() => StudentsModule),
     AssessmentsModule,
     HttpModule
   ],
   controllers: [],
-  providers: [TelegramService],
+  providers: [TelegramService, TelegramUtilsService],
+  exports: [TelegramUtilsService]
 })
 export default class TelegramModule {}

@@ -21,6 +21,7 @@ export default class ReportsService {
     private readonly pgService: PgService,
     @Inject(forwardRef(() => GradesService))
     private readonly gradesService: GradesService,
+    @Inject(forwardRef(() => StudentsService))
     private readonly studentService: StudentsService,
     private readonly mailService: MailService,
   ) {}

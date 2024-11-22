@@ -63,6 +63,35 @@ export default class GradesService {
       : grades.map((x) => this.toOutDtoWithAssessment(x));
   }
 
+  public async missingGradeAssessmentsById(
+    id: number,
+  ): Promise<string[]> {
+    const st = await this.pgService.users.findOne({
+      where: { id },
+      relations: ['student'],
+    });
+
+    if (!st) {
+      throw new NotFoundException(
+        `Student with Id ${id} not found`,
+      );
+    }
+
+    const grades = await this.pgService.grades.find({
+      where: { student: st.student },
+      relations: ['assessment'],
+    });
+
+    const assessments = await this.pgService.assessments.find({
+      where: { onGoing: true },
+      order: { id: 'ASC' },
+    });
+
+    return assessments
+      .filter((x) => !grades.some((y) => y.assessment.id === x.id))
+      .map((x) => x.name);
+  }
+
   public async missingGradeAssessmentsByUsername(
     username: string,
   ): Promise<string[]> {

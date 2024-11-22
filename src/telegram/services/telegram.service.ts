@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { Hears, Help, On, Start, Update } from 'nestjs-telegraf';
 import StudentsService from '../../students/services/students.service';
 import AssessmentsService from '../../assessments/services/assessments.service';
@@ -26,6 +26,7 @@ export default class TelegramService {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UsersService,
+    @Inject(forwardRef(() => StudentsService))
     private readonly studentService: StudentsService,
     private readonly assessmentsService: AssessmentsService,
     private readonly gradesService: GradesService,
