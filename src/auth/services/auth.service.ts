@@ -30,9 +30,8 @@ export class AuthService {
       where: { username },
       relations: ['student'],
     });
-    console.log(await user.validatePassword(password))
 
-    if (!user || !(await user.validatePassword(password))) {
+    if (!user || !(await user?.validatePassword(password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
