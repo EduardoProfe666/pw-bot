@@ -135,6 +135,7 @@ export default class ReportsService {
         gradeId: grade.id,
         assessmentId: grade.assessment.id,
         assessmentName: grade.assessment.name,
+        professorNote: grade.professorNote,
       });
     }
 

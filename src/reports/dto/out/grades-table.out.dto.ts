@@ -10,6 +10,9 @@ export class GradeRow{
   @ApiProperty()
   assessmentId: number;
 
+  @ApiProperty()
+  professorNote: string;
+
   @ApiProperty({nullable: true})
   grade: 2 | 3 | 4 | 5 | null;
 }
