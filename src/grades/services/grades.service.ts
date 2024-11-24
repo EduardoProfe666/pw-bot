@@ -66,9 +66,8 @@ export default class GradesService {
   public async missingGradeAssessmentsById(
     id: number,
   ): Promise<string[]> {
-    const st = await this.pgService.users.findOne({
+    const st = await this.pgService.students.findOne({
       where: { id },
-      relations: ['student'],
     });
 
     if (!st) {
@@ -78,7 +77,7 @@ export default class GradesService {
     }
 
     const grades = await this.pgService.grades.find({
-      where: { student: st.student },
+      where: { student: st },
       relations: ['assessment'],
     });
 
