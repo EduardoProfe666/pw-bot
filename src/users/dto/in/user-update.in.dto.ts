@@ -27,4 +27,9 @@ export default class UserUpdateInDto {
     message: 'password must contain at least one uppercase letter.',
   })
   password: string;
+
+  //new
+  @ApiProperty()
+  @IsString()
+  userIdTelegram: string;
 }

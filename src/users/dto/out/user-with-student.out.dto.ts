@@ -11,6 +11,10 @@ export default class UserWithStudentOutDto{
   @ApiProperty()
   email: string;
 
+  //new
+  @ApiProperty()
+  userIdTelegram: string;
+
   @ApiProperty({type: Student})
   student: Student;
 }
