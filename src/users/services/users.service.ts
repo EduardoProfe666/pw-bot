@@ -90,6 +90,8 @@ export default class UsersService {
       username: dto.username,
       email: dto.email,
       password: dto.password,
+      userIdTelegram: dto.userIdTelegram
+
     });
     this.logger.log(`Updated user with ID ${id}`);
     this.logger.log({ ...dto });
@@ -110,6 +112,7 @@ export default class UsersService {
       username: user.username,
       email: user.email,
       studentId: user.student?.id ?? 0
+
     };
   }
 
@@ -119,6 +122,14 @@ export default class UsersService {
       username: user.username,
       email: user.email,
       student: user.student,
+      userIdTelegram: user.userIdTelegram
     }
   }
+
+  public async updateUserTelegramID(id:number,telegramID:string):Promise<void>{
+    await this.pgService.users.update(id, {
+      userIdTelegram : telegramID
+    });
+  }
+
 }
