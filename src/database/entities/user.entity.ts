@@ -18,8 +18,8 @@ export default class User{
   password: string;
 
   // new
-  @Column({ nullable : true })
-  userIdTelegram: string;
+  @Column({ nullable: true })
+  userIdTelegram?: string;
 
   @OneToOne(() => Student, student => student.user, { onDelete: 'CASCADE' })
   @JoinColumn()
