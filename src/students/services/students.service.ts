@@ -74,7 +74,11 @@ export default class StudentsService {
 
   private async toOutDto(student: Student): Promise<StudentOutDto> {
     const username = student.user?.username ?? '';
-    const avatar = await this.telegramUtilsService.getProfilePhotoUrl();
+
+    const userIdTelegram = student.user?.userIdTelegram ?? null; // Obtén el userIdTelegram
+    const avatar = await this.telegramUtilsService.getProfilePhotoUrl(userIdTelegram);
+    
+    //const avatar = await this.telegramUtilsService.getProfilePhotoUrl();
     return {
       id: student.id,
       name: student.name,

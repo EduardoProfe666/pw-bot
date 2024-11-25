@@ -38,6 +38,17 @@ export default class TelegramService {
   async startCommand(ctx: Context) {
     const username = await this.getUsername(ctx);
     const name = await this.extractName(username);
+    
+    // new
+    const userId = await this.getUserID(ctx);
+
+    try {
+      await this.updateTelegramIdByUsername(username, userId); // Actualiza el ID en la BD
+      
+    } catch (error) {
+      this.logger.error(`Error vinculando ID de Telegram: ${error.message}`);
+    }
+
 
     await ctx.reply(
       `Hola ${name}, estoy aquí para ayudarte 😊. Presiona los botones de abajo para saber más 👇. ¿Qué deseas hacer hoy?`,
@@ -430,6 +441,24 @@ export default class TelegramService {
   private async getUsername(ctx: Context): Promise<string> {
     return ctx.from.username || this.defaultUsernameMessage;
   }
+
+  // new FN
+  private async getUserID(ctx: Context): Promise<string>{
+    return ctx.from?.id.toString();
+  }
+
+
+  // new FN
+  private async updateTelegramIdByUsername(username: string, telegramId: string): Promise<void> {
+    const user = await this.userService.getByUsername( username );
+    
+    if (!user) {
+      throw new Error(`Usuario con username ${username} no encontrado`);
+    }
+  
+    await this.userService.updateUserTelegramID(user.id , telegramId);
+  }
+
 
   private async extractName(username: string): Promise<string> {
     try {

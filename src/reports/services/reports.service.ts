@@ -265,6 +265,7 @@ export default class ReportsService {
         username: user.username,
         email: user.email,
         student: user.student,
+        userIdTelegram : user.userIdTelegram
       }))
       .filter((x) => x.username !== this.PROFESSOR_USERNAME)
       .sort((a, b) => a.student.fullName.localeCompare(b.student.fullName));
