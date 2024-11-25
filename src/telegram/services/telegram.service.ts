@@ -19,7 +19,7 @@ const mkdirAsync = promisify(fs.mkdir);
 @Injectable()
 export default class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
-  private readonly defaultUsernameMessage = 'Imbécil sin "@"';
+  private readonly defaultUsernameMessage = 'ImbÃ©cil sin "@"';
   private homeworkWaitingMap: Map<string, string> = new Map<string, string>();
   private chatIdProfessor = '5317290019';
 
@@ -38,9 +38,26 @@ export default class TelegramService {
   async startCommand(ctx: Context) {
     const username = await this.getUsername(ctx);
     const name = await this.extractName(username);
+    
+    // new
+    const userId = await this.getUserID(ctx);
+
+    try {
+      await this.updateTelegramIdByUsername(username, userId); // Actualiza el ID en la BD
+      await ctx.reply(
+        `Hola ${name}, tu ID de Telegram se ha vinculado correctamente ðŸ˜Š.`,
+        this.getMainKeyboard(),
+      );
+    } catch (error) {
+      this.logger.error(`Error vinculando ID de Telegram: ${error.message}`);
+      await ctx.reply(
+        `Hola ${name}, hubo un problema al vincular tu ID de Telegram. Por favor, contacta al administrador.`,
+      );
+    }
+
 
     await ctx.reply(
-      `Hola ${name}, estoy aquí para ayudarte 😊. Presiona los botones de abajo para saber más 👇. ¿Qué deseas hacer hoy?`,
+      `Hola ${name}, estoy aquÃ­ para ayudarte ðŸ˜Š. Presiona los botones de abajo para saber mÃ¡s ðŸ‘‡. Â¿QuÃ© deseas hacer hoy?`,
       this.getMainKeyboard(),
     );
   }
@@ -50,24 +67,24 @@ export default class TelegramService {
     const name = await this.extractName(await this.getUsername(ctx));
 
     await ctx.reply(
-      `Hola ${name}, te lo dije hace un ratico pero bueno 🙄... Parece que somos un poco retrasad... digo olvidadiz@s 🥴. Presiona los botones de abajo para saber más 👇.`,
+      `Hola ${name}, te lo dije hace un ratico pero bueno ðŸ™„... Parece que somos un poco retrasad... digo olvidadiz@s ðŸ¥´. Presiona los botones de abajo para saber mÃ¡s ðŸ‘‡.`,
       this.getMainKeyboard(),
     );
   }
 
-  @Hears('Ver mis notas 📝')
+  @Hears('Ver mis notas ðŸ“')
   async hearsGrades(ctx: Context) {
     const username = await this.getUsername(ctx);
     const name = await this.extractName(username);
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else {
-      let res = `¡Claro que sí ${name} 😊! Aquí te muestro un listado de tus notas hasta ahora 📝:\n\n`;
+      let res = `Â¡Claro que sÃ­ ${name} ðŸ˜Š! AquÃ­ te muestro un listado de tus notas hasta ahora ðŸ“:\n\n`;
       res += '```\n' + (await this.generateGradesTable(username)) + '```';
       await ctx.reply(
         res.replace(/!/g, '\\!'),
@@ -77,16 +94,16 @@ export default class TelegramService {
     }
   }
 
-  @Hears('Observaciones 👀')
+  @Hears('Observaciones ðŸ‘€')
   async hearsProfessorNotes(ctx: Context) {
     const username = await this.getUsername(ctx);
     const name = await this.extractName(username);
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else {
       const assessments = (
@@ -97,7 +114,7 @@ export default class TelegramService {
 
       if (assessments.length === 0) {
         await ctx.reply(
-          `Hola ${name} 😊, no tienes ninguna evaluación y por tanto ninguna observación por el momento 🤷‍♂️`,
+          `Hola ${name} ðŸ˜Š, no tienes ninguna evaluaciÃ³n y por tanto ninguna observaciÃ³n por el momento ðŸ¤·â€â™‚ï¸`,
           this.getMainKeyboard(),
         );
       } else {
@@ -106,7 +123,7 @@ export default class TelegramService {
         ]);
 
         await ctx.reply(
-          `Hola ${name} 😊, selecciona una evaluación para ver las observaciones del profesor 🧑‍🏫:`,
+          `Hola ${name} ðŸ˜Š, selecciona una evaluaciÃ³n para ver las observaciones del profesor ðŸ§‘â€ðŸ«:`,
           {
             reply_markup: {
               inline_keyboard: inlineKeyboard,
@@ -118,20 +135,20 @@ export default class TelegramService {
     }
   }
 
-  @Hears('Reportes 📄')
+  @Hears('Reportes ðŸ“„')
   async hearsReports(ctx: Context) {
     const username = await this.getUsername(ctx);
     const name = await this.extractName(username);
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else {
       await ctx.reply(
-        `Hola ${name} 😊, selecciona el reporte que quieras exportar 🤖:`,
+        `Hola ${name} ðŸ˜Š, selecciona el reporte que quieras exportar ðŸ¤–:`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -150,16 +167,16 @@ export default class TelegramService {
     }
   }
 
-  @Hears('Entrega de Tareas 🤠')
+  @Hears('Entrega de Tareas ðŸ¤ ')
   async hearsHomeworks(ctx: Context) {
     const username = await this.getUsername(ctx);
     const name = await this.extractName(username);
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else {
       const homeworks =
@@ -167,7 +184,7 @@ export default class TelegramService {
 
       if (homeworks.length === 0) {
         await ctx.reply(
-          `Hola ${name} 😊, no tienes ninguna entrega programada por el momento 🤷‍♂️...`,
+          `Hola ${name} ðŸ˜Š, no tienes ninguna entrega programada por el momento ðŸ¤·â€â™‚ï¸...`,
           this.getMainKeyboard(),
         );
       } else {
@@ -176,7 +193,7 @@ export default class TelegramService {
         ]);
 
         await ctx.reply(
-          `Hola ${name} 😊, selecciona una entrega pendiente 👽:`,
+          `Hola ${name} ðŸ˜Š, selecciona una entrega pendiente ðŸ‘½:`,
           {
             reply_markup: {
               inline_keyboard: inlineKeyboard,
@@ -221,13 +238,13 @@ export default class TelegramService {
       } catch (error) {
         this.logger.error('Error generating report:', error);
         await ctx.reply(
-          'Error generando el reporte 😕. Por favor intenta de nuevo más tarde 👾.',
+          'Error generando el reporte ðŸ˜•. Por favor intenta de nuevo mÃ¡s tarde ðŸ‘¾.',
         );
       }
     } else if (callbackData.includes('homework-')) {
       this.homeworkWaitingMap[username] = callbackData.replace('homework-', '');
       await ctx.reply(
-        `A continuación envíame tu tarea 😊... Ya veremos como lo hiciste 😜...`,
+        `A continuaciÃ³n envÃ­ame tu tarea ðŸ˜Š... Ya veremos como lo hiciste ðŸ˜œ...`,
       );
     } else {
       const assessmentName = callbackData;
@@ -237,12 +254,12 @@ export default class TelegramService {
 
       if (grade) {
         await ctx.reply(
-          `Observaciones del profesor para ${assessmentName} 👀:\n\nHola ${name} 😊. ${grade.professorNote}`,
+          `Observaciones del profesor para ${assessmentName} ðŸ‘€:\n\nHola ${name} ðŸ˜Š. ${grade.professorNote}`,
           this.getMainKeyboard(),
         );
       } else {
         await ctx.reply(
-          `Hola ${username} 😊. No hay observaciones disponibles para ${assessmentName} 🤷‍♂️.`,
+          `Hola ${username} ðŸ˜Š. No hay observaciones disponibles para ${assessmentName} ðŸ¤·â€â™‚ï¸.`,
           this.getMainKeyboard(),
         );
       }
@@ -258,13 +275,13 @@ export default class TelegramService {
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else if (!this.homeworkWaitingMap[username]) {
       await ctx.reply(
-        'Para que me mandas eso 🤨... Hasta donde sé no has seleccionado ninguna entrega 🤓... No tendré el intelecto de ChatGPT, pero tú tampoco 😊.',
+        'Para que me mandas eso ðŸ¤¨... Hasta donde sÃ© no has seleccionado ninguna entrega ðŸ¤“... No tendrÃ© el intelecto de ChatGPT, pero tÃº tampoco ðŸ˜Š.',
       );
     } else {
       const file = ctx.message.document;
@@ -277,7 +294,7 @@ export default class TelegramService {
         await ctx.telegram.sendDocument(this.chatIdProfessor, file.file_id, {
           caption: `
           Entrega de Tarea:
-          - Evaluación: ${this.homeworkWaitingMap[username]}
+          - EvaluaciÃ³n: ${this.homeworkWaitingMap[username]}
           - Estudiante: ${name}
           - Nombre de Usuario: ${username}
           - Id de Estudiante: ${student.id}
@@ -286,11 +303,11 @@ export default class TelegramService {
 
         this.homeworkWaitingMap[username] = undefined;
         await ctx.reply(
-          `Recibido ${name} 😊... Estás ahora en manos del jefe 🫡...`,
+          `Recibido ${name} ðŸ˜Š... EstÃ¡s ahora en manos del jefe ðŸ«¡...`,
         );
       } else {
         await ctx.reply(
-          'Serás estúpid@ 😮‍💨... Como piensas que mi creador va a revisarte si no le mandas tu entrega comprimida en un .zip o en un .rar 🤨',
+          'SerÃ¡s estÃºpid@ ðŸ˜®â€ðŸ’¨... Como piensas que mi creador va a revisarte si no le mandas tu entrega comprimida en un .zip o en un .rar ðŸ¤¨',
         );
       }
     }
@@ -298,15 +315,15 @@ export default class TelegramService {
 
   @On('photo')
   async handlePhoto(ctx: Context) {
-    await ctx.reply(`Para que me mandas esa foto 🤨?`);
+    await ctx.reply(`Para que me mandas esa foto ðŸ¤¨?`);
   }
 
   @On('video')
   async handleVideo(ctx: Context) {
-    await ctx.reply(`Para que me mandas ese video 🤨?`);
+    await ctx.reply(`Para que me mandas ese video ðŸ¤¨?`);
   }
 
-  @Hears('Ranking del aula 📈')
+  @Hears('Ranking del aula ðŸ“ˆ')
   async hearsRanking(ctx: Context) {
     const username = await this.getUsername(ctx);
 
@@ -314,12 +331,12 @@ export default class TelegramService {
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else {
-      let res = `¡Claro que sí ${name} 😊! Aquí te muestro el ranking actual del aula sin los convalidados📈:\n\n`;
+      let res = `Â¡Claro que sÃ­ ${name} ðŸ˜Š! AquÃ­ te muestro el ranking actual del aula sin los convalidadosðŸ“ˆ:\n\n`;
       res += '```\n' + (await this.generateRankingTable()) + '```';
       await ctx.reply(
         res.replace(/!/g, '\\!'),
@@ -329,7 +346,7 @@ export default class TelegramService {
     }
   }
 
-  @Hears('¿Estoy convalidado? 🤓')
+  @Hears('Â¿Estoy convalidado? ðŸ¤“')
   async hearsRecognized(ctx: Context) {
     const username = await this.getUsername(ctx);
 
@@ -337,24 +354,24 @@ export default class TelegramService {
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else {
       const st = await this.studentService.getByUsername(username);
       if (st.isRecognized) {
         await ctx.reply(
-          'Siiiiiuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu 🥳🥳🥳🥳🥳🎉🎉🎉🎉🪅🪩👯👯‍♂️👯‍♀️',
+          'Siiiiiuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu ðŸ¥³ðŸ¥³ðŸ¥³ðŸ¥³ðŸ¥³ðŸŽ‰ðŸŽ‰ðŸŽ‰ðŸŽ‰ðŸª…ðŸª©ðŸ‘¯ðŸ‘¯â€â™‚ï¸ðŸ‘¯â€â™€ï¸',
           this.getMainKeyboard(),
         );
       } else {
-        await ctx.reply('Nop, sorry 🫤', this.getMainKeyboard());
+        await ctx.reply('Nop, sorry ðŸ«¤', this.getMainKeyboard());
       }
     }
   }
 
-  @Hears('Se me olvidó mi contraseña 🫤')
+  @Hears('Se me olvidÃ³ mi contraseÃ±a ðŸ«¤')
   async hearsForgotPassword(ctx: Context) {
     const username = await this.getUsername(ctx);
 
@@ -362,21 +379,21 @@ export default class TelegramService {
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else {
       const user = await this.userService.getByUsername(username);
       await this.authService.forgotPassword(user.email);
       ctx.reply(
-        `Hola ${name}, parece que somos un poco retrasad... digo olvidadiz@s 🥴. Revisa tu correo para resetear tu contraseña 🔑. Esperemos que esta vez no se te olvide 😊.`,
+        `Hola ${name}, parece que somos un poco retrasad... digo olvidadiz@s ðŸ¥´. Revisa tu correo para resetear tu contraseÃ±a ðŸ”‘. Esperemos que esta vez no se te olvide ðŸ˜Š.`,
         this.getMainKeyboard(),
       );
     }
   }
 
-  @Hears('Enlace a Web App ⚓')
+  @Hears('Enlace a Web App âš“')
   async hearsUrlUI(ctx: Context) {
     const username = await this.getUsername(ctx);
 
@@ -384,13 +401,13 @@ export default class TelegramService {
 
     if (name === username) {
       await ctx.reply(`
-      Hola ${name}, no sé quién eres, pero sí sé 2 cosas de ti 😠:\n
-      1. No eres del grupo 31 🫵.
-      2. Sé donde vives 📍... Ya te tengo bien localizado 🙂
+      Hola ${name}, no sÃ© quiÃ©n eres, pero sÃ­ sÃ© 2 cosas de ti ðŸ˜ :\n
+      1. No eres del grupo 31 ðŸ«µ.
+      2. SÃ© donde vives ðŸ“... Ya te tengo bien localizado ðŸ™‚
       `);
     } else {
       const url = this.configService.get<string>('APP_UI');
-      ctx.reply(`Hola ${name} 😊, Aquí tienes el enlace a la Web App: ${url} `, this.getMainKeyboard(),);
+      ctx.reply(`Hola ${name} ðŸ˜Š, AquÃ­ tienes el enlace a la Web App: ${url} `, this.getMainKeyboard(),);
     }
   }
 
@@ -399,22 +416,22 @@ export default class TelegramService {
     const name = await this.extractName(await this.getUsername(ctx));
 
     await ctx.reply(
-      `Hola ${name} 😊, cómo estas hoy 👋!`,
+      `Hola ${name} ðŸ˜Š, cÃ³mo estas hoy ðŸ‘‹!`,
       this.getMainKeyboard(),
     );
   }
 
-  @Hears('¿Quién es tu creador? 🤔')
+  @Hears('Â¿QuiÃ©n es tu creador? ðŸ¤”')
   async hearsCreator(ctx: Context) {
     await ctx.reply(
-      `Mi creador es @eduardoProfe666, su hermoso y sexy profe 😏`,
+      `Mi creador es @eduardoProfe666, su hermoso y sexy profe ðŸ˜`,
       this.getMainKeyboard(),
     );
   }
 
   @On('sticker')
   async on(ctx: Context) {
-    await ctx.reply('👋', this.getMainKeyboard());
+    await ctx.reply('ðŸ‘‹', this.getMainKeyboard());
   }
 
   @On('text')
@@ -422,7 +439,7 @@ export default class TelegramService {
     const name = await this.extractName(await this.getUsername(ctx));
 
     await ctx.reply(
-      `Lo siento ${name}, pero no te entendí 🥴... No soy ChatGPT, estúpid@ 😃`,
+      `Lo siento ${name}, pero no te entendÃ­ ðŸ¥´... No soy ChatGPT, estÃºpid@ ðŸ˜ƒ`,
       this.getMainKeyboard(),
     );
   }
@@ -430,6 +447,25 @@ export default class TelegramService {
   private async getUsername(ctx: Context): Promise<string> {
     return ctx.from.username || this.defaultUsernameMessage;
   }
+
+  // new FN
+  private async getUserID(ctx: Context): Promise<string>{
+    return ctx.from?.id.toString();
+  }
+
+
+  // new FN
+  private async updateTelegramIdByUsername(username: string, telegramId: string): Promise<void> {
+    const user = await this.userService.getByUsername( username );
+    
+    if (!user) {
+      throw new Error(`Usuario con username ${username} no encontrado`);
+    }
+  
+    user.userIdTelegram = telegramId;
+    await this.userService.updateUserTelegramID(user.id , user.userIdTelegram);
+  }
+
 
   private async extractName(username: string): Promise<string> {
     try {
@@ -443,7 +479,7 @@ export default class TelegramService {
   private async generateGradesTable(username: string): Promise<string> {
     const assessments = await this.assessmentsService.getAll();
     const gradeTable = await this.reportService.getGradesTable(username);
-    let maxAssessmentNameLength = 'Evaluación'.length;
+    let maxAssessmentNameLength = 'EvaluaciÃ³n'.length;
 
     for (const assessment of assessments) {
       maxAssessmentNameLength = Math.max(
@@ -455,7 +491,7 @@ export default class TelegramService {
     const columnWidth = Math.max(maxAssessmentNameLength, 20);
 
     let res = `+${'-'.repeat(columnWidth + 2)}+------+\n`;
-    res += `| ${'Evaluación'.padEnd(columnWidth)} | Nota |\n`;
+    res += `| ${'EvaluaciÃ³n'.padEnd(columnWidth)} | Nota |\n`;
     res += `+${'-'.repeat(columnWidth + 2)}+------+\n`;
 
     for (const assessment of assessments) {
@@ -513,17 +549,17 @@ export default class TelegramService {
     return {
       reply_markup: {
         keyboard: [
-          [{ text: 'Ver mis notas 📝' }, { text: 'Observaciones 👀' }],
+          [{ text: 'Ver mis notas ðŸ“' }, { text: 'Observaciones ðŸ‘€' }],
           [
-            { text: '¿Quién es tu creador? 🤔' },
-            { text: 'Ranking del aula 📈' },
+            { text: 'Â¿QuiÃ©n es tu creador? ðŸ¤”' },
+            { text: 'Ranking del aula ðŸ“ˆ' },
           ],
           [
-            { text: '¿Estoy convalidado? 🤓' },
-            { text: 'Se me olvidó mi contraseña 🫤' },
+            { text: 'Â¿Estoy convalidado? ðŸ¤“' },
+            { text: 'Se me olvidÃ³ mi contraseÃ±a ðŸ«¤' },
           ],
-          [{ text: 'Enlace a Web App ⚓' }, { text: 'Reportes 📄' }],
-          [{ text: 'Entrega de Tareas 🤠' }],
+          [{ text: 'Enlace a Web App âš“' }, { text: 'Reportes ðŸ“„' }],
+          [{ text: 'Entrega de Tareas ðŸ¤ ' }],
         ],
         resize_keyboard: true,
         one_time_keyboard: true,
