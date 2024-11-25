@@ -90,7 +90,7 @@ export default class UsersService {
       username: dto.username,
       email: dto.email,
       password: dto.password,
-      userIdTelegram: dto.userIdTelegram
+      userIdTelegram: user.userIdTelegram
 
     });
     this.logger.log(`Updated user with ID ${id}`);
@@ -122,7 +122,6 @@ export default class UsersService {
       username: user.username,
       email: user.email,
       student: user.student,
-      userIdTelegram: user.userIdTelegram
     }
   }
 

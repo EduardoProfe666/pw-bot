@@ -28,8 +28,4 @@ export default class UserUpdateInDto {
   })
   password: string;
 
-  //new
-  @ApiProperty()
-  @IsString()
-  userIdTelegram: string;
 }
