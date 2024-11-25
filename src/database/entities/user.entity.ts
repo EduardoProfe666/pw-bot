@@ -17,6 +17,10 @@ export default class User{
   @Column()
   password: string;
 
+  // new
+  @Column({ nullable : true })
+  userIdTelegram: string;
+
   @OneToOne(() => Student, student => student.user, { onDelete: 'CASCADE' })
   @JoinColumn()
   student: Student;
